@@ -8,7 +8,7 @@
 library(readxl)
 library(growthcurver)
 
-d <- read_excel("R/TestFiles/DTT_log_3_col.xlsx",
+d <- read_excel("Exp0719.xlsx",
                   col_types = "numeric")
 
 ##### CLEAN DATA
