@@ -9,6 +9,7 @@ library(readxl)
 library(growthcurver)
 library(reshape2)
 library(ggplot2)
+library(dplyr)
 
 d <- read_excel("Exp0719.xlsx",col_types = "numeric")
 
@@ -36,8 +37,10 @@ for (i in 1:dim(gc_out)[1]) {
 gc_out$t_gen = gc_out$t_gen * 60
 
 ##### PLOT THE GENERATION TIMES
-#ybr_dat <- gc_out[grepl("YBR4",gc_out[,1]),]
-#ybr_dat
 
-ggplot(gc_out, aes(sample,t_gen)) + geom_boxplot()
+p <- ggplot(gc_out, aes(sample,t_gen,fill=sample,
+                        palette = "jco",alpha=0.7)) 
+p + geom_boxplot()
+
+
 ##### END
