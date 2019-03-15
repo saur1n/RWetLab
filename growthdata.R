@@ -12,7 +12,7 @@ d <- read_excel("Exp0719.xlsx",
                   col_types = "numeric")
 
 ##### CLEAN DATA
-d$Time[length(d$Time)] <- 1
+d$Time[length(d$Time)] <- 2
 d$Time <- d$Time*(24*60)
 d <- d[,c(1,3:length(d))]
 
