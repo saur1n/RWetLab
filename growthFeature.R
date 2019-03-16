@@ -11,15 +11,16 @@ library(reshape2)
 library(ggplot2)
 library(dplyr)
 
-d <- read_excel("rawData/Exp10_19.xlsx",col_types = "numeric")
+d <- read.csv("outData/Exp10_19C.csv",header = TRUE)
 
 ##### CLEAN DATA
+d = d[,!names(d) == 'X']
 #d$Time[length(d$Time)] <- 1 
 d$Time <- d$Time/60 #convert to hours
 #d <- d[,c(1,3:length(d))] #removing blanks
 
 ##### CHECK
-gc_fit <- SummarizeGrowth(d$Time, d$YPR126C4_1..95)
+gc_fit <- SummarizeGrowth(d$Time, d$C.YPR126C4_2..96)
 plot(gc_fit)
 
 ##### FIT LINES FOR ALL WELLS
@@ -31,7 +32,7 @@ head(gc_out)
 #write.csv(gc_out,'outData/growthFeatures.csv')
 
 for (i in 1:dim(gc_out)[1]) {
-  tmp = unlist(strsplit(gc_out['sample'][i,],'[.]'))[1]
+  tmp = unlist(strsplit(gc_out['sample'][i,],'[.]'))[2]
   gc_out['sample'][i,] = tmp
 }
 

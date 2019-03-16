@@ -7,7 +7,7 @@
 ##### INITIALIZATION
 #install.packages("readxl")
 library(readxl)
-d <- read_excel("Exp0719.xlsx",
+d <- read_excel("rawData/Exp10_19.xlsx",
                 col_types = "numeric") #choose input file here
 
 ##### MODELS
@@ -43,6 +43,6 @@ for (i in 2:length(d)){
 }
 
 ##### OUTPUT
-write.csv(out,'Exp0719C.csv') #name output file
+write.csv(out,'outData/Exp10_19C.csv') #name output file
 
 ##### END
