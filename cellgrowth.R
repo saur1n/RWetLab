@@ -5,20 +5,25 @@
 ##### INITIALIZATION
 #install.packages("readxl")
 #install.packages("cellGrowth")
+library(readxl)
+library(locfit)
 library(cellGrowth)
+source("functions/plcor.R")
 
-d <- read_excel("R/TestFiles/DTT_log_3_col.xlsx",
-                col_types = "numeric")
+d <- read_excel("rawData/Exp10_19.xlsx",col_types = "numeric")
+
+##### PATH LENGTH CORRECTION
+df <- plcor(d,125)
 
 ##### CLEAN DATA
-d$Time[length(d$Time)] <- 1
-d$Time <- d$Time*(24*60*60)
-d <- d[,c(1,3:length(d))]
+df$Time[length(df$Time)] <- 1
+df$Time <- df$Time*(24*60*60)
+df <- df[,c(1,3:length(df))]
 
 ##### FIT DATA
 fit = fitCellGrowth(
-  x=d$Time,
-  z=log2(d$A1)
+  x=df$Time,
+  z=log2(df$A1)
 )
 
 plot(fit, scaleX=1/(60*60), xlab="time (hours)")
