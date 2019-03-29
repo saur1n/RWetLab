@@ -8,6 +8,7 @@
 library(readxl)
 library(locfit)
 library(cellGrowth)
+library(ggplot2)
 source("functions/plcor.R")
 
 d <- read_excel("rawData/Exp15_19_rawData.xlsx",col_types = "numeric")
@@ -45,8 +46,7 @@ for (i in 2:length(df)) {
   stime[i-1] = df$Time[attr(fit,"pointOfMax")]/(60*60)
 }
 
-###### CREATING OUTPUT FILE
-
+###### CREATING OUTPUT FILE FOR GROWTH ATTRIBUTES
 out$Sample = sample.names$Sample.Name
 out$MaxGrowthRate = maxgr
 out$DoubleTime = dtime
@@ -54,5 +54,18 @@ out$SaturationTime = stime
 
 out <- data.frame(matrix(unlist(out), nrow=length(maxgr)), stringsAsFactors=FALSE)
 colnames(out) <- c('Sample','MaxGrowthRate','DoubleTime','SaturationTime')
+out <- out[order(out$Sample),]
+out$Sample <- factor(out$Sample)
+out <- transform(out, MaxGrowthRate = as.numeric(MaxGrowthRate), 
+          DoubleTime = as.numeric(DoubleTime),
+          SaturationTime = as.numeric(SaturationTime))
 
 write.csv(out,'outData/cellGrowth_T1.csv')
+
+###### PLOTTING DOUBLING TIME
+temp <- out[out$Sample != 'MEDIA',]
+temp <- temp[temp$Sample != 'BLANK',]
+
+p <- ggplot(temp, aes(x=Sample,y=DoubleTime)) + geom_boxplot()
+p + geom_jitter(position=position_jitter(0.2))
+
