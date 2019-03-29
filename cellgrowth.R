@@ -30,7 +30,7 @@ df <- plcor(d,125)
 #colnames(df) <- title
 
 ##### FIT DATA
-#fit = fitCellGrowth(x=df$Time,z=log2(df$A9))
+#fit = fitCellGrowth(x=df$Time,z=log2(df$B3))
 #plot(fit, scaleX=1/(60*60), xlab="time (hours)")
 #attributes(fit)[c(3,4,5,6)]
 
@@ -66,6 +66,6 @@ write.csv(out,'outData/cellGrowth_T1.csv')
 temp <- out[out$Sample != 'MEDIA',]
 temp <- temp[temp$Sample != 'BLANK',]
 
-p <- ggplot(temp, aes(x=Sample,y=DoubleTime)) + geom_boxplot()
+p <- ggplot(temp, aes(x=Sample,y=DoubleTime)) + geom_boxplot() + ylim(50,150)
 p + geom_jitter(position=position_jitter(0.2))
 
