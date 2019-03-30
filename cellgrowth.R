@@ -4,7 +4,9 @@
 
 ##### INITIALIZATION
 #install.packages("readxl")
+#install.packages("locfit")
 #install.packages("cellGrowth")
+#install.packages("ggplot2")
 library(readxl)
 library(locfit)
 library(cellGrowth)
@@ -27,7 +29,6 @@ d <- d[,c(1,3:length(d))]
 
 ##### PATH LENGTH CORRECTION
 df <- plcor(d,125)
-#colnames(df) <- title
 
 ##### FIT DATA
 #fit = fitCellGrowth(x=df$Time,z=log2(df$B3))
@@ -48,14 +49,16 @@ for (i in 2:length(df)) {
 
 ###### CREATING OUTPUT FILE FOR GROWTH ATTRIBUTES
 out$Sample = sample.names$Sample.Name
+out$Media = sample.names$Group.Name
 out$MaxGrowthRate = maxgr
 out$DoubleTime = dtime
 out$SaturationTime = stime
 
 out <- data.frame(matrix(unlist(out), nrow=length(maxgr)), stringsAsFactors=FALSE)
-colnames(out) <- c('Sample','MaxGrowthRate','DoubleTime','SaturationTime')
-out <- out[order(out$Sample),]
+colnames(out) <- c('Sample','Media','MaxGrowthRate','DoubleTime','SaturationTime')
+out <- out[order(out$Media,out$Sample),]
 out$Sample <- factor(out$Sample)
+out$Media <- factor(out$Media)
 out <- transform(out, MaxGrowthRate = as.numeric(MaxGrowthRate), 
           DoubleTime = as.numeric(DoubleTime),
           SaturationTime = as.numeric(SaturationTime))
@@ -66,6 +69,11 @@ write.csv(out,'outData/cellGrowth_T1.csv')
 temp <- out[out$Sample != 'MEDIA',]
 temp <- temp[temp$Sample != 'BLANK',]
 
-p <- ggplot(temp, aes(x=Sample,y=DoubleTime)) + geom_boxplot() + ylim(50,150)
-p + geom_jitter(position=position_jitter(0.2))
+ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
 
+p <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
+  geom_boxplot() + 
+  geom_point(aes(fill = Sample)) +
+  theme(legend.position = 'right') +
+  theme_light()
+p + ylim(ylim1)
