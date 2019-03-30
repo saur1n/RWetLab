@@ -63,6 +63,7 @@ out$SaturationTime = stime
 out <- data.frame(matrix(unlist(out), nrow=length(maxgr)), stringsAsFactors=FALSE)
 colnames(out) <- c('Media','Sample','MaxGrowthRate','DoubleTime','SaturationTime')
 out <- out[order(out$Media,out$Sample),]
+rownames(out) <- NULL
 out$Sample <- factor(out$Sample)
 out$Media <- factor(out$Media)
 out <- transform(out, MaxGrowthRate = as.numeric(MaxGrowthRate), 
