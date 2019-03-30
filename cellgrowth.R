@@ -7,15 +7,18 @@
 #install.packages("locfit")
 #install.packages("cellGrowth")
 #install.packages("ggplot2")
+#install.packages("ggpubr")
 library(readxl)
 library(locfit)
 library(cellGrowth)
 library(ggplot2)
+library(ggpubr)
 source("functions/plcor.R")
 
 d <- read_excel("rawData/Exp15_19_rawData.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp15_19.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
 expt.name = 'Exp15'
+ref.name = 'REF'
 path.out = 'outData/'
 dir.create(file.path(path.out, 'plots'), showWarnings = FALSE)
 
@@ -75,24 +78,39 @@ out <- out[out$Sample != 'BLANK',]
 for (m in 1:length(unique(out$Media))) {
   temp <- out[out$Media == unique(out$Media)[m],]
   ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
+  #change this depending on how clean the data is
   
   p0 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
-    geom_boxplot(na.rm = TRUE) + 
-    geom_point(aes(fill = Sample),na.rm = TRUE) +
+    geom_boxplot(na.rm = TRUE,alpha=0.7) + 
+    geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
     theme(legend.position = 'right') +
-    theme_light()
+    theme_light() +
+    stat_compare_means(label = "p.signif",
+                       method = "t.test",
+                       ref.group = ref.name,
+                       paired = FALSE,
+                       na.rm = TRUE)
   p0 + ylim(ylim1)
   ggsave(sprintf('%splots/%s_%s_DTIME_BOX.png',
                  path.out,expt.name,unique(out$Media)[m]),
          width = 10, height = 10)
   
   p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
-    geom_violin(na.rm = TRUE) + 
-    geom_point(aes(fill = Sample),na.rm = TRUE) +
+    geom_violin(na.rm = TRUE,alpha=0.7) + 
+    geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
     theme(legend.position = 'right') +
-    theme_light()
+    theme_light() +
+    stat_compare_means(label = "p.signif",
+                       method = "t.test",
+                       ref.group = ref.name,
+                       paired = FALSE,
+                       na.rm = TRUE)
   p1 + ylim(ylim1)
   ggsave(sprintf('%splots/%s_%s_DTIME_VIO.png',
                  path.out,expt.name,unique(out$Media)[m]),
          width = 10, height = 10)
 }
+
+#compare_means(DoubleTime~Sample,data=temp,ref.group="REF",
+#              method="wilcox.test")
+#geom_hline(yintercept = mean(temp$DoubleTime[temp$Sample == 'REF'])) +
