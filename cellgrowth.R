@@ -13,12 +13,13 @@ library(locfit)
 library(cellGrowth)
 library(ggplot2)
 library(ggpubr)
+library(stringr)
 source("functions/plcor.R")
 
-d <- read_excel("rawData/Exp15_19_rawData.xlsx",col_types = "numeric")
-sample.names <- read.table("rawData/Exp15_19.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
-expt.name = 'Exp15'
-ref.name = 'REF'
+d <- read_excel("rawData/Exp1019.xlsx",col_types = "numeric")
+sample.names <- read.table("rawData/Exp08_19.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
+expt.name = 'Exp10'
+ref.name = c('GEV1','GEV')
 path.out = 'outData/'
 dir.create(file.path(path.out, 'plots'), showWarnings = FALSE)
 
@@ -31,7 +32,7 @@ stime = NULL
 ##### CLEAN DATA
 d$Time <- seq(0,15*(dim(d)[1]-1),15)
 d$Time <- d$Time*60
-d <- d[,c(1,3:length(d))]
+#d <- d[,c(1,3:length(d))]
 
 ##### PATH LENGTH CORRECTION
 df <- plcor(d,125)
@@ -66,8 +67,8 @@ out$SaturationTime = stime
 
 out <- data.frame(matrix(unlist(out), nrow=length(maxgr)), stringsAsFactors=FALSE)
 colnames(out) <- c('Media','Sample','MaxGrowthRate','DoubleTime','SaturationTime')
-out <- out[order(out$Media),]
 out <- out[order(out$Sample),]
+out <- out[order(out$Media),]
 rownames(out) <- NULL
 out$Sample <- factor(out$Sample)
 out$Media <- factor(out$Media)
@@ -93,12 +94,14 @@ for (m in 1:length(unique(out$Media))) {
     theme_light() +
     stat_compare_means(label = "p.signif",
                        method = "t.test",
-                       ref.group = ref.name,
+                       ref.group = ref.name[m],
                        paired = FALSE,
                        na.rm = TRUE)
   p0 + ylim(ylim1)
   ggsave(sprintf('%splots/%s_%s_DTIME_BOX_%s.png',
-                 path.out,expt.name,unique(out$Media)[m],model),
+                 path.out,expt.name,
+                 str_replace_all(unique(out$Media)[m], "[+]", "_"),
+                 model),
          width = 10, height = 10)
   
   p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
@@ -108,12 +111,14 @@ for (m in 1:length(unique(out$Media))) {
     theme_light() +
     stat_compare_means(label = "p.signif",
                        method = "t.test",
-                       ref.group = ref.name,
+                       ref.group = ref.name[m],
                        paired = FALSE,
                        na.rm = TRUE)
   p1 + ylim(ylim1)
   ggsave(sprintf('%splots/%s_%s_DTIME_VIO_%s.png',
-                 path.out,expt.name,unique(out$Media)[m]),model,
+                 path.out,expt.name,
+                 str_replace_all(unique(out$Media)[m], "[+]", "_"),
+                 model),
          width = 10, height = 10)
 }
 
