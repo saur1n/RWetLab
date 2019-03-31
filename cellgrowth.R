@@ -45,13 +45,17 @@ df <- plcor(d,125)
 #log(2)/attr(fit,"maxGrowthRate")/60
 
 ##### LOOP THROUGH ALL THE DATA
+model <- c('locfit','logistic','gompertz','rosso','baranyi')
+model <- model[1]
+
 for (i in 2:length(df)) {
   OD = abs(matrix(unlist(df[i]), ncol = 1, byrow = TRUE))
-  fit = fitCellGrowth(x=df$Time,z=log2(OD))
+  fit = fitCellGrowth(x=df$Time,z=log2(OD),model=model)
   maxgr[i-1] = attr(fit,"maxGrowthRate")/60
   dtime[i-1] = log(2)/attr(fit,"maxGrowthRate")/60
   stime[i-1] = df$Time[attr(fit,"pointOfMax")]/(60*60)
 }
+
 
 ###### CREATING OUTPUT FILE FOR GROWTH ATTRIBUTES
 out$Media = sample.names$Group.Name
@@ -62,7 +66,8 @@ out$SaturationTime = stime
 
 out <- data.frame(matrix(unlist(out), nrow=length(maxgr)), stringsAsFactors=FALSE)
 colnames(out) <- c('Media','Sample','MaxGrowthRate','DoubleTime','SaturationTime')
-out <- out[order(out$Media,out$Sample),]
+out <- out[order(out$Media),]
+out <- out[order(out$Sample),]
 rownames(out) <- NULL
 out$Sample <- factor(out$Sample)
 out$Media <- factor(out$Media)
@@ -70,7 +75,7 @@ out <- transform(out, MaxGrowthRate = as.numeric(MaxGrowthRate),
           DoubleTime = as.numeric(DoubleTime),
           SaturationTime = as.numeric(SaturationTime))
 
-write.csv(out,sprintf('%s%s_GROWTH_DATA.csv',path.out,expt.name))
+write.csv(out,sprintf('%s%s_GROWTH_DATA_%s.csv',path.out,expt.name,model))
 
 ###### PLOTTING DOUBLING TIME
 out <- out[out$Sample != 'MEDIA',]
@@ -92,8 +97,8 @@ for (m in 1:length(unique(out$Media))) {
                        paired = FALSE,
                        na.rm = TRUE)
   p0 + ylim(ylim1)
-  ggsave(sprintf('%splots/%s_%s_DTIME_BOX.png',
-                 path.out,expt.name,unique(out$Media)[m]),
+  ggsave(sprintf('%splots/%s_%s_DTIME_BOX_%s.png',
+                 path.out,expt.name,unique(out$Media)[m],model),
          width = 10, height = 10)
   
   p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
@@ -107,8 +112,8 @@ for (m in 1:length(unique(out$Media))) {
                        paired = FALSE,
                        na.rm = TRUE)
   p1 + ylim(ylim1)
-  ggsave(sprintf('%splots/%s_%s_DTIME_VIO.png',
-                 path.out,expt.name,unique(out$Media)[m]),
+  ggsave(sprintf('%splots/%s_%s_DTIME_VIO_%s.png',
+                 path.out,expt.name,unique(out$Media)[m]),model,
          width = 10, height = 10)
 }
 
