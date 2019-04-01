@@ -16,9 +16,9 @@ library(ggpubr)
 library(stringr)
 source("functions/plcor.R")
 
-d <- read_excel("rawData/Exp1019.xlsx",col_types = "numeric")
+d <- read_excel("rawData/Exp0919.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp08_19.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
-expt.name = 'Exp10'
+expt.name = 'Exp09'
 ref.name = c('GEV1','GEV')
 path.out = 'outData/'
 dir.create(file.path(path.out, 'plots'), showWarnings = FALSE)
