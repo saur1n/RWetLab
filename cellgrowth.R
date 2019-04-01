@@ -54,21 +54,21 @@ for (i in 2:length(df)) {
     attributes(fit0)[c(3,5)] = attributes(fit1)[c(3,5)]
     attributes(fit0)[4] = length(logOD) - length(logOD[logOD >= -4]) + attr(fit1,'pointOfMaxGrowthRate')
   }
-  jpeg(sprintf('%splots/growthcurves/%s_%s_%s_%s_GC.png',
-               path.out,
-               expt.name,
-               sample.names$Sample.Name[i-1],
-               sample.names$Well.Location[i-1],
-               str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
-       width=600, height=600)
-  plot(fit0, scaleX=1/(60*60), xlab="Time (hrs)",
-       main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
-                    expt.name,
-                    sample.names$Group.Name[i-1],
-                    sample.names$Sample.Name[i-1],
-                    sample.names$Well.Location[i-1],
-                    log(2)/attr(fit0,"maxGrowthRate")/60))
-  dev.off()
+  #jpeg(sprintf('%splots/growthcurves/%s_%s_%s_%s_GC.png',
+  #             path.out,
+  #             expt.name,
+  #             sample.names$Sample.Name[i-1],
+  #             sample.names$Well.Location[i-1],
+  #             str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+  #     width=600, height=600)
+  #plot(fit0, scaleX=1/(60*60), xlab="Time (hrs)",
+  #     main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+  #                  expt.name,
+  #                  sample.names$Group.Name[i-1],
+  #                  sample.names$Sample.Name[i-1],
+  #                  sample.names$Well.Location[i-1],
+  #                  log(2)/attr(fit0,"maxGrowthRate")/60))
+  #dev.off()
   maxgr[i-1] = attr(fit0,"maxGrowthRate")/60
   dtime[i-1] = log(2)/attr(fit0,"maxGrowthRate")/60
   stime[i-1] = df$Time[attr(fit0,"pointOfMax")]/(60*60)
@@ -98,9 +98,21 @@ write.csv(out,sprintf('%s%s_GROWTH_DATA_%s.csv',path.out,expt.name,model))
 out <- out[out$Sample != 'MEDIA',]
 out <- out[out$Sample != 'BLANK',]
 
+
+
 for (m in 1:length(unique(out$Media))) {
   temp <- out[out$Media == unique(out$Media)[m],]
-  ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
+  for (s in 1:length(unique(temp$Sample))) {
+    std = sd(temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]])
+    mn = mean(temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]])
+    if (length(temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]][temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]] < mn - 2*std]) != 0) {
+      temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]][temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]] < mn - 2*std] = NaN
+    }
+    if (length(temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]][temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]] > mn + 2*std]) != 0) {
+      temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]][temp$DoubleTime[temp$Sample == unique(temp$Sample)[s]] > mn + 2*std] = NaN
+    }
+  }
+  #ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
   #change this depending on how clean the data is
   
   p0 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
@@ -115,7 +127,7 @@ for (m in 1:length(unique(out$Media))) {
                        ref.group = ref.name[m],
                        paired = FALSE,
                        na.rm = TRUE)
-  p0 + ylim(ylim1)
+  p0 #+ ylim(ylim1)
   ggsave(sprintf('%splots/%s_%s_DTIME_BOX_%s.png',
                  path.out,expt.name,
                  str_replace_all(unique(out$Media)[m], "[+]", "_"),
@@ -134,7 +146,7 @@ for (m in 1:length(unique(out$Media))) {
                        ref.group = ref.name[m],
                        paired = FALSE,
                        na.rm = TRUE)
-  p1 + ylim(ylim1)
+  p1 #+ ylim(ylim1)
   ggsave(sprintf('%splots/%s_%s_DTIME_VIO_%s.png',
                  path.out,expt.name,
                  str_replace_all(unique(out$Media)[m], "[+]", "_"),
