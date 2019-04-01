@@ -4,24 +4,25 @@
 
 ##### INITIALIZATION
 #install.packages("readxl")
-#install.packages("locfit")
+#install.packages("locfit0")
 #install.packages("cellGrowth")
 #install.packages("ggplot2")
 #install.packages("ggpubr")
 library(readxl)
-library(locfit)
+library(locfit0)
 library(cellGrowth)
 library(ggplot2)
 library(ggpubr)
 library(stringr)
 source("functions/plcor.R")
 
-d <- read_excel("rawData/Exp0919.xlsx",col_types = "numeric")
+d <- read_excel("rawData/Exp1019.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp08_19.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
-expt.name = 'Exp09'
-ref.name = c('GEV1','GEV')
+expt.name = 'Exp10'
+ref.name = c('GEV','GEV')
 path.out = 'outData/'
 dir.create(file.path(path.out, 'plots'), showWarnings = FALSE)
+dir.create(file.path(path.out, 'plots/growthcurves'), showWarnings = FALSE)
 
 ##### INITIALIZE OUTPUT
 out = NULL
@@ -36,14 +37,15 @@ d$Time <- d$Time*60
 
 ##### PATH LENGTH CORRECTION
 df <- plcor(d,125)
+write.csv(df,sprintf('%s%s_PATHLENGTH.csv',path.out,expt.name))
 
-##### FIT DATA
-#fit = fitCellGrowth(x=df$Time,z=log2(df$B3))
-#plot(fit, scaleX=1/(60*60), xlab="time (hours)")
-#attributes(fit)[c(3,4,5,6)]
+##### fit0 DATA
+#fit0 = fitCellGrowth(x=df$Time,z=log2(df$B3))
+#plot(fit0, scaleX=1/(60*60), xlab="time (hours)")
+#attributes(fit0)[c(3,4,5,6)]
 
-#df$Time[attr(fit,"pointOfMax")]/(60*60)
-#log(2)/attr(fit,"maxGrowthRate")/60
+#df$Time[attr(fit0,"pointOfMax")]/(60*60)
+#log(2)/attr(fit0,"maxGrowthRate")/60
 
 ##### LOOP THROUGH ALL THE DATA
 model <- c('locfit','logistic','gompertz','rosso','baranyi')
@@ -51,10 +53,32 @@ model <- model[1]
 
 for (i in 2:length(df)) {
   OD = abs(matrix(unlist(df[i]), ncol = 1, byrow = TRUE))
-  fit = fitCellGrowth(x=df$Time,z=log2(OD),model=model)
-  maxgr[i-1] = attr(fit,"maxGrowthRate")/60
-  dtime[i-1] = log(2)/attr(fit,"maxGrowthRate")/60
-  stime[i-1] = df$Time[attr(fit,"pointOfMax")]/(60*60)
+  logOD = log2(OD)
+  fit0 = fitCellGrowth(x=df$Time,z=logOD,model=model)
+  if (length(logOD[logOD >= -4.5]) != 0) {
+    fit1 = fitCellGrowth(x=df$Time[logOD >= -4.5],
+                         z=logOD[logOD >= -4.5],
+                         model=model)
+    attributes(fit0)[c(3,4,5,6)] = attributes(fit1)[c(3,4,5,6)]
+  }
+  jpeg(sprintf('%splots/growthcurves/%s_%s_%s_%s_GC.png',
+               path.out,
+               expt.name,
+               sample.names$Sample.Name[i-1],
+               sample.names$Well.Location[i-1],
+               str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+       width=600, height=600)
+  plot(fit0, scaleX=1/(60*60), xlab="Time (hrs)",
+       main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+                    expt.name,
+                    sample.names$Group.Name[i-1],
+                    sample.names$Sample.Name[i-1],
+                    sample.names$Well.Location[i-1],
+                    log(2)/attr(fit0,"maxGrowthRate")/60))
+  dev.off()
+  maxgr[i-1] = attr(fit0,"maxGrowthRate")/60
+  dtime[i-1] = log(2)/attr(fit0,"maxGrowthRate")/60
+  stime[i-1] = df$Time[attr(fit0,"pointOfMax")]/(60*60)
 }
 
 
@@ -93,7 +117,7 @@ for (m in 1:length(unique(out$Media))) {
     theme(legend.position = 'right') +
     theme_light() +
     stat_compare_means(label = "p.signif",
-                       method = "t.test",
+                       method = "wilcox.test",
                        ref.group = ref.name[m],
                        paired = FALSE,
                        na.rm = TRUE)
@@ -110,7 +134,7 @@ for (m in 1:length(unique(out$Media))) {
     theme(legend.position = 'right') +
     theme_light() +
     stat_compare_means(label = "p.signif",
-                       method = "t.test",
+                       method = "wilcox.test",
                        ref.group = ref.name[m],
                        paired = FALSE,
                        na.rm = TRUE)
