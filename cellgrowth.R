@@ -55,11 +55,12 @@ for (i in 2:length(df)) {
   OD = abs(matrix(unlist(df[i]), ncol = 1, byrow = TRUE))
   logOD = log2(OD)
   fit0 = fitCellGrowth(x=df$Time,z=logOD,model=model)
-  if (length(logOD[logOD >= -4.5]) != 0) {
-    fit1 = fitCellGrowth(x=df$Time[logOD >= -4.5],
-                         z=logOD[logOD >= -4.5],
+  if (length(logOD[logOD >= -4]) != 0) {
+    fit1 = fitCellGrowth(x=df$Time[logOD >= -4],
+                         z=logOD[logOD >= -4],
                          model=model)
-    attributes(fit0)[c(3,4,5,6)] = attributes(fit1)[c(3,4,5,6)]
+    attributes(fit0)[c(3,5)] = attributes(fit1)[c(3,5)]
+    attributes(fit0)[4] = length(logOD) - length(logOD[logOD >= -4]) + attr(fit1,'pointOfMaxGrowthRate')
   }
   jpeg(sprintf('%splots/growthcurves/%s_%s_%s_%s_GC.png',
                path.out,
@@ -114,6 +115,8 @@ for (m in 1:length(unique(out$Media))) {
   p0 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
     geom_boxplot(na.rm = TRUE,alpha=0.7) + 
     geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+    labs(title=sprintf("%s: %s",expt.name,out$Media[m]),
+         x ="Sample", y = "Doubling Time (mins)") +
     theme(legend.position = 'right') +
     theme_light() +
     stat_compare_means(label = "p.signif",
@@ -131,6 +134,8 @@ for (m in 1:length(unique(out$Media))) {
   p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
     geom_violin(na.rm = TRUE,alpha=0.7) + 
     geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+    labs(title=sprintf("%s: %s",expt.name,out$Media[m]),
+          x ="Sample", y = "Doubling Time (mins)") +
     theme(legend.position = 'right') +
     theme_light() +
     stat_compare_means(label = "p.signif",
