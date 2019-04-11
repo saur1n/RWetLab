@@ -55,32 +55,35 @@ for (i in 2:length(df)) {
     
   } else {
     fit <- fit_easylinear(df$Time, df[[i]], h=14, quota = 1);
-    if (coef(fit)[[4]] > 45) {
-      maxgr_fit[i-1] = coef(fit)[[3]]
-      dtime_fit[i-1] = log(2)/coef(fit)[[3]]
-      ltime_fit[i-1] = coef(fit)[[4]]
-    } else {
-      fit <- fit_easylinear(df$Time[5:length(df$Time)], df[[i]][5:length(df$Time)], h=14, quota = 1);
-      maxgr_fit[i-1] = coef(fit)[[3]]
-      dtime_fit[i-1] = log(2)/coef(fit)[[3]]
-      ltime_fit[i-1] = coef(fit)[[4]]
-    }
+    # if (coef(fit)[[4]] > 45) {
+    #   maxgr_fit[i-1] = coef(fit)[[3]]
+    #   dtime_fit[i-1] = log(2)/coef(fit)[[3]]
+    #   ltime_fit[i-1] = coef(fit)[[4]]
+    # } else {
+    #   fit <- fit_easylinear(df$Time[34:length(df$Time)], df[[i]][34:length(df$Time)], h=14, quota = 1);
+    #   maxgr_fit[i-1] = coef(fit)[[3]]
+    #   dtime_fit[i-1] = log(2)/coef(fit)[[3]]
+    #   ltime_fit[i-1] = coef(fit)[[4]]
+    # }
+    maxgr_fit[i-1] = coef(fit)[[3]]
+    dtime_fit[i-1] = log(2)/coef(fit)[[3]]
+    ltime_fit[i-1] = coef(fit)[[4]]
     
-    # jpeg(sprintf('%sLIN_%s_%s_%s_%s_GR.png',
-    #              plot.path.out,
-    #              expt.name,
-    #              sample.names$Well.Location[i-1],
-    #              sample.names$Sample.Name[i-1],
-    #              str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
-    #      width=1200, height=1200)
-    # plot(fit, log = 'y',
-    #      main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
-    #                   expt.name,
-    #                   sample.names$Group.Name[i-1],
-    #                   sample.names$Sample.Name[i-1],
-    #                   sample.names$Well.Location[i-1],
-    #                   log(2)/coef(fit)[[3]]))
-    # dev.off()
+    jpeg(sprintf('%sLIN_%s_%s_%s_%s_GR.png',
+                 plot.path.out,
+                 expt.name,
+                 sample.names$Well.Location[i-1],
+                 sample.names$Sample.Name[i-1],
+                 str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+         width=1200, height=1200)
+    plot(fit, log = 'y',
+         main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+                      expt.name,
+                      sample.names$Group.Name[i-1],
+                      sample.names$Sample.Name[i-1],
+                      sample.names$Well.Location[i-1],
+                      log(2)/coef(fit)[[3]]))
+    dev.off()
     
     # res <- fit_spline(df$Time, df[[i]], optgrid = 5);
     # maxgr_res[i-1] = coef(res)[[2]]
