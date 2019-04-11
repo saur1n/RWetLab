@@ -27,14 +27,18 @@ dir.create(file.path(path.out, 'plots/growthcurves/growthrates'), showWarnings =
 plot.path.out = 'outData/plots/growthcurves/growthrates/'
 
 ##### INITIALIZE OUTPUT
-out = NULL
-maxgr = NULL
-dtime = NULL
-stime = NULL
+out_fit = NULL
+maxgr_fit = NULL
+dtime_fit = NULL
+ltime_fit = NULL
+
+out_res = NULL
+maxgr_res = NULL
+dtime_res = NULL
 
 ##### CLEAN DATA
 d$Time <- seq(0,15*(dim(d)[1]-1),15)
-d$Time <- d$Time*60
+#d$Time <- d$Time*60
 #d <- d[,c(1,3:length(d))]
 
 ##### PATH LENGTH CORRECTION
@@ -57,25 +61,51 @@ log(2)/coef(res)[[2]]/60
 
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {
-  fit <- fit_easylinear(df$Time, df[[i]], h=14, quota = 1)
-  res <- fit_spline(df$Time, df[[i]], optgrid = 5)
-  
-  jpeg(sprintf('%splots/growthcurves/%s_%s_%s_%s_LIN_GR.png',
-               path.out,
-               expt.name,
-               sample.names$Well.Location[i-1],
-               sample.names$Sample.Name[i-1],
-               str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
-       width=600, height=600)
-  plot(fit, log = 'y', #xlab = "Time (mins)",
-       main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
-                    expt.name,
-                    sample.names$Group.Name[i-1],
-                    sample.names$Sample.Name[i-1],
-                    sample.names$Well.Location[i-1],
-                    log(2)/coef(fit)[[3]]))
-  dev.off()
-  maxgr[i-1] = attr(fit0,"maxGrowthRate")/60
-  dtime[i-1] = log(2)/attr(fit0,"maxGrowthRate")/60
-  stime[i-1] = df$Time[attr(fit0,"pointOfMax")]/(60*60)
+  if (sum(df[[i]] <= 0)) {
+    maxgr_fit[i-1] = NaN
+    dtime_fit[i-1] = NaN
+    ltime_fit[i-1] = NaN
+    maxgr_res[i-1] = NaN
+    dtime_fit[i-1] = NaN
+    
+  } else {
+    fit <- fit_easylinear(df$Time, df[[i]], h=14, quota = 1);
+    jpeg(sprintf('%sLIN_%s_%s_%s_%s_GR.png',
+                 plot.path.out,
+                 expt.name,
+                 sample.names$Well.Location[i-1],
+                 sample.names$Sample.Name[i-1],
+                 str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+         width=600, height=600)
+    plot(fit, log = 'y',
+         main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+                      expt.name,
+                      sample.names$Group.Name[i-1],
+                      sample.names$Sample.Name[i-1],
+                      sample.names$Well.Location[i-1],
+                      log(2)/coef(fit)[[3]]))
+    dev.off()
+    maxgr_fit[i-1] = coef(fit)[[3]]
+    dtime_fit[i-1] = log(2)/coef(fit)[[3]]
+    ltime_fit[i-1] = coef(fit)[[4]]
+    
+    res <- fit_spline(df$Time, df[[i]], optgrid = 5);
+    jpeg(sprintf('%sRES_%s_%s_%s_%s_GR.png',
+                 plot.path.out,
+                 expt.name,
+                 sample.names$Well.Location[i-1],
+                 sample.names$Sample.Name[i-1],
+                 str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+         width=600, height=600)
+    plot(res, log = 'y',
+         main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+                      expt.name,
+                      sample.names$Group.Name[i-1],
+                      sample.names$Sample.Name[i-1],
+                      sample.names$Well.Location[i-1],
+                      log(2)/coef(res)[[2]]))
+    dev.off()
+    maxgr_res[i-1] = coef(res)[[2]]
+    dtime_fit[i-1] = log(2)/coef(res)[[2]]
+  }
 }
