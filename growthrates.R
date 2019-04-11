@@ -82,7 +82,8 @@ for (i in 2:length(df)) {
                       sample.names$Group.Name[i-1],
                       sample.names$Sample.Name[i-1],
                       sample.names$Well.Location[i-1],
-                      log(2)/coef(fit)[[3]]))
+                      log(2)/coef(fit)[[3]]),
+         ylim = c(0.00001,2))
     dev.off()
     
     # res <- fit_spline(df$Time, df[[i]], optgrid = 5);
