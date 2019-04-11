@@ -1,6 +1,6 @@
-##### CELL GROWTH
+##### GROWTH RATE
 ##### Author  : Saurin Parikh (dr.saurin.parikh@gmail.com)
-##### Date    : 09/13/2018
+##### Date    : 04/10/2019
 
 ##### INITIALIZATION
 #install.packages("readxl")
@@ -44,21 +44,6 @@ d$Time <- seq(0,15*(dim(d)[1]-1),15)
 ##### PATH LENGTH CORRECTION
 df <- plcor(d,125)
 
-##### TRY OUT FITS
-fit <- fit_easylinear(df$Time, df$F6, h=14, quota = 1)
-#summary(fit)
-#coef(fit)
-
-#par(mfrow = c(1, 2))
-plot(fit, log = 'y')
-#plot(fit)
-log(2)/coef(fit)[[3]]
-coef(fit)[[4]]
-
-res <- fit_spline(df$Time, df$F6, optgrid = 5)
-plot(res, log = 'y')
-log(2)/coef(res)[[2]]/60
-
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {
   if (sum(df[[i]] <= 0)) {
@@ -70,42 +55,156 @@ for (i in 2:length(df)) {
     
   } else {
     fit <- fit_easylinear(df$Time, df[[i]], h=14, quota = 1);
-    jpeg(sprintf('%sLIN_%s_%s_%s_%s_GR.png',
-                 plot.path.out,
-                 expt.name,
-                 sample.names$Well.Location[i-1],
-                 sample.names$Sample.Name[i-1],
-                 str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
-         width=600, height=600)
-    plot(fit, log = 'y',
-         main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
-                      expt.name,
-                      sample.names$Group.Name[i-1],
-                      sample.names$Sample.Name[i-1],
-                      sample.names$Well.Location[i-1],
-                      log(2)/coef(fit)[[3]]))
-    dev.off()
-    maxgr_fit[i-1] = coef(fit)[[3]]
-    dtime_fit[i-1] = log(2)/coef(fit)[[3]]
-    ltime_fit[i-1] = coef(fit)[[4]]
+    if (coef(fit)[[4]] > 45) {
+      maxgr_fit[i-1] = coef(fit)[[3]]
+      dtime_fit[i-1] = log(2)/coef(fit)[[3]]
+      ltime_fit[i-1] = coef(fit)[[4]]
+    } else {
+      fit <- fit_easylinear(df$Time[5:length(df$Time)], df[[i]][5:length(df$Time)], h=14, quota = 1);
+      maxgr_fit[i-1] = coef(fit)[[3]]
+      dtime_fit[i-1] = log(2)/coef(fit)[[3]]
+      ltime_fit[i-1] = coef(fit)[[4]]
+    }
     
-    res <- fit_spline(df$Time, df[[i]], optgrid = 5);
-    jpeg(sprintf('%sRES_%s_%s_%s_%s_GR.png',
-                 plot.path.out,
-                 expt.name,
-                 sample.names$Well.Location[i-1],
-                 sample.names$Sample.Name[i-1],
-                 str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
-         width=600, height=600)
-    plot(res, log = 'y',
-         main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
-                      expt.name,
-                      sample.names$Group.Name[i-1],
-                      sample.names$Sample.Name[i-1],
-                      sample.names$Well.Location[i-1],
-                      log(2)/coef(res)[[2]]))
-    dev.off()
-    maxgr_res[i-1] = coef(res)[[2]]
-    dtime_fit[i-1] = log(2)/coef(res)[[2]]
+    # jpeg(sprintf('%sLIN_%s_%s_%s_%s_GR.png',
+    #              plot.path.out,
+    #              expt.name,
+    #              sample.names$Well.Location[i-1],
+    #              sample.names$Sample.Name[i-1],
+    #              str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+    #      width=1200, height=1200)
+    # plot(fit, log = 'y',
+    #      main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+    #                   expt.name,
+    #                   sample.names$Group.Name[i-1],
+    #                   sample.names$Sample.Name[i-1],
+    #                   sample.names$Well.Location[i-1],
+    #                   log(2)/coef(fit)[[3]]))
+    # dev.off()
+    
+    # res <- fit_spline(df$Time, df[[i]], optgrid = 5);
+    # maxgr_res[i-1] = coef(res)[[2]]
+    # dtime_fit[i-1] = log(2)/coef(res)[[2]]
+    # 
+    # # jpeg(sprintf('%sRES_%s_%s_%s_%s_GR.png',
+    # #              plot.path.out,
+    # #              expt.name,
+    # #              sample.names$Well.Location[i-1],
+    # #              sample.names$Sample.Name[i-1],
+    # #              str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+    # #      width=1200, height=1200)
+    # # plot(res, log = 'y',
+    # #      main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+    # #                   expt.name,
+    # #                   sample.names$Group.Name[i-1],
+    # #                   sample.names$Sample.Name[i-1],
+    # #                   sample.names$Well.Location[i-1],
+    # #                   log(2)/coef(res)[[2]]))
+    # # dev.off()
   }
 }
+
+###### CREATING OUTPUT FILE FOR GROWTH ATTRIBUTES
+out_fit$Media = sample.names$Group.Name
+out_fit$Sample = sample.names$Sample.Name
+out_fit$MaxGrowthRate = maxgr_fit
+out_fit$DoubleTime = dtime_fit
+out_fit$LagTime = ltime_fit
+
+out_fit <- data.frame(matrix(unlist(out_fit), nrow=length(maxgr_fit)), stringsAsFactors=FALSE)
+colnames(out_fit) <- c('Media','Sample','MaxGrowthRate','DoubleTime','LagTime')
+out_fit <- out_fit[order(out_fit$Sample),]
+out_fit <- out_fit[order(out_fit$Media),]
+rownames(out_fit) <- NULL
+out_fit$Sample <- factor(out_fit$Sample)
+out_fit$Media <- factor(out_fit$Media)
+out_fit <- transform(out_fit, MaxGrowthRate = as.numeric(MaxGrowthRate), 
+                 DoubleTime = as.numeric(DoubleTime),
+                 LagTime = as.numeric(LagTime))
+
+# write.csv(out_fit,sprintf('%sLIN_%s_GROWTH_DATA_GR.csv',path.out,expt.name))
+
+# out_res$Media = sample.names$Group.Name
+# out_res$Sample = sample.names$Sample.Name
+# out_res$MaxGrowthRate = maxgr_res
+# out_res$DoubleTime = dtime_res
+# 
+# out_res <- data.frame(matrix(unlist(out_res), nrow=length(maxgr_res)), stringsAsFactors=FALSE)
+# colnames(out_res) <- c('Media','Sample','MaxGrowthRate','DoubleTime')
+# out_res <- out_res[order(out_res$Sample),]
+# out_res <- out_res[order(out_res$Media),]
+# rownames(out_res) <- NULL
+# out_res$Sample <- factor(out_res$Sample)
+# out_res$Media <- factor(out_res$Media)
+# out_res <- transform(out_res, MaxGrowthRate = as.numeric(MaxGrowthRate), 
+#                  DoubleTime = as.numeric(DoubleTime))
+# 
+# write.csv(out_res,sprintf('%sRES_%s_GROWTH_DATA_GR.csv',path.out,expt.name))
+
+###### PLOTTING DOUBLING TIME
+out_fit <- out_fit[out_fit$Sample != 'MEDIA',]
+out_fit <- out_fit[out_fit$Sample != 'BLANK',]
+
+for (m in 1:length(unique(out_fit$Media))) {
+  temp <- out_fit[out_fit$Media == unique(out_fit$Media)[m],]
+  ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
+  ylim2 = boxplot.stats(temp$MaxGrowthRate)$stats[c(1, 5)]
+  #change this depending on how clean the data is
+  
+  p0 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
+    geom_boxplot(na.rm = TRUE,alpha=0.7) + 
+    geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+    labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
+         x ="Sample", y = "Doubling Time (mins)") +
+    theme(legend.position = 'right') +
+    theme_light() +
+    stat_compare_means(label = "p.signif",
+                       method = "wilcox.test",
+                       ref.group = ref.name[m],
+                       paired = FALSE,
+                       na.rm = TRUE)
+  p0 + ylim(ylim1)
+  ggsave(sprintf('%splots/LIN_%s_%s_DTIME_BOX_GR.png',
+                 path.out,expt.name,
+                 str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
+         width = 10, height = 10)
+
+  p00 <- ggplot(temp, aes(x=Sample,y=MaxGrowthRate,fill=Sample)) + 
+    geom_boxplot(na.rm = TRUE,alpha=0.7) + 
+    geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+    labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
+         x ="Sample", y = "Max Growth Rate (1/min)") +
+    theme(legend.position = 'right') +
+    theme_light() +
+    stat_compare_means(label = "p.signif",
+                       method = "wilcox.test",
+                       ref.group = ref.name[m],
+                       paired = FALSE,
+                       na.rm = TRUE)
+  p00 + ylim(ylim2)
+  ggsave(sprintf('%splots/LIN_%s_%s_MAXGR_BOX_GR.png',
+                 path.out,expt.name,
+                 str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
+         width = 10, height = 10)
+  
+  # p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
+  #   geom_violin(na.rm = TRUE,alpha=0.7) + 
+  #   geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+  #   labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
+  #        x ="Sample", y = "Doubling Time (mins)") +
+  #   theme(legend.position = 'right') +
+  #   theme_light() +
+  #   stat_compare_means(label = "p.signif",
+  #                      method = "wilcox.test",
+  #                      ref.group = ref.name[m],
+  #                      paired = FALSE,
+  #                      na.rm = TRUE)
+  # p1 + ylim(ylim1)
+  # ggsave(sprintf('%splots/LIN_%s_%s_DTIME_VIO_GR.png',
+  #                path.out,expt.name,
+  #                str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
+  #        width = 10, height = 10)
+}
+
+
+
