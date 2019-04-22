@@ -16,10 +16,10 @@ library(ggpubr)
 library(stringr)
 source("functions/plcor.R")
 
-d <- read_excel("rawData/Exp1019_selected.xlsx",col_types = "numeric")
-sample.names <- read.table("rawData/Exp08_19.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
-expt.name = 'Exp10'
-ref.name = c('GEV','GEV')
+d <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
+sample.names <- read.table("rawData/Exp16_19_SpreedSheet.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
+expt.name = 'Exp16'
+#ref.name = c('GEV','GEV')
 path.out = 'outData/'
 dir.create(file.path(path.out, 'plots'), showWarnings = FALSE)
 dir.create(file.path(path.out, 'plots/growthcurves'), showWarnings = FALSE)
@@ -37,12 +37,20 @@ maxgr_res = NULL
 dtime_res = NULL
 
 ##### CLEAN DATA
+colnames(d) <- c('Time',sample.names$Sample.Name)
 d$Time <- seq(0,15*(dim(d)[1]-1),15)
 #d$Time <- d$Time*60
 #d <- d[,c(1,3:length(d))]
+d <- d[1:89,] # just need the first 22 hours in Expt16
+blank1 = d$BLANK_YPDA[1]
+blank2 = d$BLANK_YPDA[1]
+d[,3:49] <- d[,3:49] - blank1
+d[,50:97] <- d[,50:97] - blank2
 
+  
 ##### PATH LENGTH CORRECTION
-df <- plcor(d,125)
+#df <- plcor(d,125)
+df <- d
 
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {
@@ -55,16 +63,6 @@ for (i in 2:length(df)) {
     
   } else {
     fit <- fit_easylinear(df$Time, df[[i]], h=14, quota = 1);
-    # if (coef(fit)[[4]] > 45) {
-    #   maxgr_fit[i-1] = coef(fit)[[3]]
-    #   dtime_fit[i-1] = log(2)/coef(fit)[[3]]
-    #   ltime_fit[i-1] = coef(fit)[[4]]
-    # } else {
-    #   fit <- fit_easylinear(df$Time[34:length(df$Time)], df[[i]][34:length(df$Time)], h=14, quota = 1);
-    #   maxgr_fit[i-1] = coef(fit)[[3]]
-    #   dtime_fit[i-1] = log(2)/coef(fit)[[3]]
-    #   ltime_fit[i-1] = coef(fit)[[4]]
-    # }
     maxgr_fit[i-1] = coef(fit)[[3]]
     dtime_fit[i-1] = log(2)/coef(fit)[[3]]
     ltime_fit[i-1] = coef(fit)[[4]]
@@ -85,26 +83,6 @@ for (i in 2:length(df)) {
                       log(2)/coef(fit)[[3]]),
          ylim = c(0.00001,2))
     dev.off()
-    
-    # res <- fit_spline(df$Time, df[[i]], optgrid = 5);
-    # maxgr_res[i-1] = coef(res)[[2]]
-    # dtime_fit[i-1] = log(2)/coef(res)[[2]]
-    # 
-    # # jpeg(sprintf('%sRES_%s_%s_%s_%s_GR.png',
-    # #              plot.path.out,
-    # #              expt.name,
-    # #              sample.names$Well.Location[i-1],
-    # #              sample.names$Sample.Name[i-1],
-    # #              str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
-    # #      width=1200, height=1200)
-    # # plot(res, log = 'y',
-    # #      main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
-    # #                   expt.name,
-    # #                   sample.names$Group.Name[i-1],
-    # #                   sample.names$Sample.Name[i-1],
-    # #                   sample.names$Well.Location[i-1],
-    # #                   log(2)/coef(res)[[2]]))
-    # # dev.off()
   }
 }
 
