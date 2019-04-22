@@ -37,20 +37,20 @@ maxgr_res = NULL
 dtime_res = NULL
 
 ##### CLEAN DATA
-colnames(d) <- c('Time',sample.names$Sample.Name)
 d$Time <- seq(0,15*(dim(d)[1]-1),15)
 #d$Time <- d$Time*60
 #d <- d[,c(1,3:length(d))]
 d <- d[1:89,] # just need the first 22 hours in Expt16
-blank1 = d$BLANK_YPDA[1]
-blank2 = d$BLANK_YPDA[1]
-d[,3:49] <- d[,3:49] - blank1
+blank1 = d$A1[1]
+blank2 = d$E1[1]
+d[,3:49] <- d[,3:49] - blank1[1]
 d[,51:97] <- d[,51:97] - blank2
 
   
 ##### PATH LENGTH CORRECTION
-#df <- plcor(d,125)
-df <- d
+df <- plcor(d,125)
+#df <- d
+colnames(df) <- c('Time',sample.names$Sample.Name)
 
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {
@@ -67,13 +67,14 @@ for (i in 2:length(df)) {
     dtime_fit[i-1] = log(2)/coef(fit)[[3]]
     ltime_fit[i-1] = coef(fit)[[4]]
     
-    jpeg(sprintf('%sLIN %s %s %s %s.png',
+    jpeg(sprintf('%s%s %s %s.png',
                  plot.path.out,
                  expt.name,
-                 sample.names$Descriptor1.Value[i-1],
-                 #sample.names$Well.Location[i-1],
                  sample.names$Sample.Name[i-1],
-                 str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
+                 #sample.names$Well.Location[i-1],
+                 sample.names$Descriptor1.Value[i-1]#,
+                 #str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")
+                 ),
          width=1200, height=1200)
     plot(fit, log = 'y',
          main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
@@ -83,7 +84,7 @@ for (i in 2:length(df)) {
                       sample.names$Well.Location[i-1],
                       sample.names$Descriptor1.Value[i-1],
                       log(2)/coef(fit)[[3]]),
-         ylim = c(0.01,2))
+         ylim = c(0.04,6))
     dev.off()
   }
 }
