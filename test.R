@@ -15,10 +15,12 @@ test <- data.frame(Sample=character(0),
 
 
 for (i in 2:dim(d)[2]) {
-  test[i-1,] = list('foo')
- test$Sample[1]  = as.character('hello')
+  test[i-1,1:dim(d)[1]] = list('foo')
+  test$Sample[1]  = as.character('hello')
  }
 
 test[1,] <- list("fowo")
+library(reshape2)
+foo <- melt(df[,2:dim(df)[2]])
 
 ?character()
