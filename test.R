@@ -20,7 +20,24 @@ for (i in 2:dim(d)[2]) {
  }
 
 test[1,] <- list("fowo")
-library(reshape2)
-foo <- melt(df[,2:dim(df)[2]])
 
-?character()
+
+library(readxl)
+library(growthrates)
+library(lattice)
+
+plc_data <- read_excel("rawData/plc_data.xlsx")
+
+
+L <- all_easylinear(Value ~ Time | OD + Sample, data=plc_data)
+summary(L)
+coef(L)
+rsquared(L)
+results <- results(L)
+
+xyplot(mumax ~ OD|Sample, data=results)
+
+write.csv(results,'outData/plc_results.csv')
+  
+  
+  
