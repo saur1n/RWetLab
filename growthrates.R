@@ -45,7 +45,7 @@ d <- d[1:89,] # just need the first 22 hours in Expt16
 blank1 = d$BLANK_YPDA[1]
 blank2 = d$BLANK_YPDA[1]
 d[,3:49] <- d[,3:49] - blank1
-d[,50:97] <- d[,50:97] - blank2
+d[,51:97] <- d[,51:97] - blank2
 
   
 ##### PATH LENGTH CORRECTION
@@ -67,21 +67,23 @@ for (i in 2:length(df)) {
     dtime_fit[i-1] = log(2)/coef(fit)[[3]]
     ltime_fit[i-1] = coef(fit)[[4]]
     
-    jpeg(sprintf('%sLIN_%s_%s_%s_%s_GR.png',
+    jpeg(sprintf('%sLIN %s %s %s %s.png',
                  plot.path.out,
                  expt.name,
-                 sample.names$Well.Location[i-1],
+                 sample.names$Descriptor1.Value[i-1],
+                 #sample.names$Well.Location[i-1],
                  sample.names$Sample.Name[i-1],
                  str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")),
          width=1200, height=1200)
     plot(fit, log = 'y',
-         main=sprintf('%s\n%s %s (%s)\nDoubling Time = %0.2f mins',
+         main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
                       expt.name,
                       sample.names$Group.Name[i-1],
                       sample.names$Sample.Name[i-1],
                       sample.names$Well.Location[i-1],
+                      sample.names$Descriptor1.Value[i-1],
                       log(2)/coef(fit)[[3]]),
-         ylim = c(0.00001,2))
+         ylim = c(0.01,2))
     dev.off()
   }
 }
