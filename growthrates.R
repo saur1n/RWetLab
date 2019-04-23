@@ -41,15 +41,19 @@ d$Time <- seq(0,15*(dim(d)[1]-1),15)
 #d$Time <- d$Time*60
 #d <- d[,c(1,3:length(d))]
 d <- d[1:89,] # just need the first 22 hours in Expt16
-blank1 = d$A1[1]
-blank2 = d$E1[1]
-d[,3:49] <- d[,3:49] - blank1[1]
-d[,51:97] <- d[,51:97] - blank2
+# blank1 = d$A1[1]
+# blank2 = d$E1[1]
+# d[,3:49] <- d[,3:49] - blank1[1]
+# d[,51:97] <- d[,51:97] - blank2
 
   
 ##### PATH LENGTH CORRECTION
 df <- plcor(d,125)
 #df <- d
+blank1 = df$A1[1]
+blank2 = df$E1[1]
+df[,3:49] <- df[,3:49] - blank1
+df[,51:97] <- df[,51:97] - blank2
 colnames(df) <- c('Time',sample.names$Sample.Name)
 
 ##### LOOP THROUGH ALL DATA
