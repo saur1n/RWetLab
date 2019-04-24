@@ -50,12 +50,12 @@ d <- d[1:89,] # just need the first 22 hours in Expt16
 
   
 ##### PATH LENGTH CORRECTION
-for (i in 2:dim(d)[2]) {
-  temp <- data.frame(ul125 = d[[i]])
-  d[[i]] <- predict(fit, temp)
+df <- d
+for (i in 2:dim(df)[2]) {
+  temp <- data.frame(ul125 = df[[i]])
+  df[[i]] <- predict(fit, temp)
 }
 #df <- plcor(d,125)
-df <- d
 blank1 = df$A1[1]
 blank2 = df$E1[1]
 df[,3:49] <- df[,3:49] - blank1
@@ -64,8 +64,10 @@ colnames(df) <- c('Time',sample.names$Sample.Name)
 
 ##### APPLY FILTERS
 for (i in 2:dim(df)[2]) {
-  df[[i]] <- smth(df[[i]],window = 0.1,method = "gaussian")
+  df[[i]] <- smth(df[[i]],window = 0.08,method = "gaussian")
 }
+
+df <- df[4:85,]
 
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {
