@@ -19,7 +19,7 @@ ggplot(dd, aes(x=C,y=ul125)) +
   labs(title="Path Length Correction",
        x ="Cuvette OD", y = "Plate OD") +
   theme_light() + 
-  theme(panel.grid.minor = element_line(colour="blue", size=0.1)) +
+  theme(panel.grid.minor = element_line(colour="grey30", size=0.1)) +
   scale_y_continuous(breaks = seq(0,10,0.2), minor_breaks = seq(0,10,0.1)) +
   scale_x_continuous(breaks = seq(0,10,1), minor_breaks = seq(0,10,0.5))
 
@@ -32,19 +32,6 @@ invfit <- lm(ul125~C+I(C^2)+I(C^3)+I(C^4), data=dd)
 
 temp <- data.frame(C = c(0.25,0.125,0.0625,0.03125))
 cstart <- predict(invfit, temp)
-
-
-pr <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
-
-dim(pr)
-pr$Time <- seq(0,15*(dim(pr)[1]-1),15)
-pr <- pr[1:89,]
-
-for (i in 2:dim(pr)[2]) {
-  temp <- data.frame(ul125 = pr[[i]])
-  pr[[i]] <- predict(fit, temp)
-}
-
-df<- pr
+cstart
 
 
