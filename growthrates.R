@@ -14,7 +14,9 @@ library(growthrates)
 library(ggplot2)
 library(ggpubr)
 library(stringr)
+library(smoother)
 source("functions/plcor.R")
+load('plc_models/plcor125.rda')
 
 d <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp16_19_SpreedSheet.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
@@ -48,13 +50,22 @@ d <- d[1:89,] # just need the first 22 hours in Expt16
 
   
 ##### PATH LENGTH CORRECTION
-df <- plcor(d,125)
-#df <- d
+for (i in 2:dim(d)[2]) {
+  temp <- data.frame(ul125 = d[[i]])
+  d[[i]] <- predict(fit, temp)
+}
+#df <- plcor(d,125)
+df <- d
 blank1 = df$A1[1]
 blank2 = df$E1[1]
 df[,3:49] <- df[,3:49] - blank1
 df[,51:97] <- df[,51:97] - blank2
 colnames(df) <- c('Time',sample.names$Sample.Name)
+
+##### APPLY FILTERS
+for (i in 2:dim(df)[2]) {
+  df[[i]] <- smth(df[[i]],window = 0.1,method = "gaussian")
+}
 
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {

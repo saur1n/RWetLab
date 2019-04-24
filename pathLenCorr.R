@@ -19,6 +19,7 @@ last_plot() + geom_line(aes(x=pC, y=ul125), col=2)
 summary(fit)$r.squared
 summary(fit)$adj.r.squared
 
+save(fit, file = 'plc_models/plcor125.rda')
 
 pr <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
 
