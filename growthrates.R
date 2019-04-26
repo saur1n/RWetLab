@@ -16,7 +16,7 @@ library(ggpubr)
 library(stringr)
 library(smoother)
 source("functions/plcor.R")
-load('plc_models/plcor125.rda')
+load('plc_models/plcor125_nobc.rda')
 
 d <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp16_19_SpreedSheet.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)

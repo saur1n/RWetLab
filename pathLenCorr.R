@@ -76,8 +76,6 @@ p2 <- ggplot(dd, aes(x=C,y=ul125)) +
   scale_x_continuous(breaks = seq(0,10,1), minor_breaks = seq(0,10,0.5))
 grid.arrange(p2, p1, nrow = 1)
 
-
-
 ##### OLD DATA
 dd0 <- read_excel("rawData/pathlengthdata_old.xlsx",col_types = "numeric")
 colnames(dd0) <- c('ul150','ul125','ul100','ul80','C')
