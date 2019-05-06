@@ -16,7 +16,7 @@ library(ggpubr)
 library(stringr)
 library(smoother)
 #source("functions/plcor.R")
-load('plc_models/plc_fy125spns.rda')
+load('plc_models/plc_fy125mps.rda')
 
 d <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp16_19_SpreedSheet.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
@@ -109,6 +109,7 @@ for (i in 2:length(df)) {
 ###### CREATING OUTPUT FILE FOR GROWTH ATTRIBUTES
 out_fit$Media = sample.names$Group.Name
 out_fit$Sample = sample.names$Sample.Name
+out_fit$StartingOD = sample.names$Descriptor1.Value
 out_fit$MaxGrowthRate = maxgr_fit
 out_fit$DoubleTime = dtime_fit
 out_fit$LagTime = ltime_fit
