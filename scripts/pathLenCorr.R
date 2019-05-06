@@ -8,9 +8,9 @@ library(readxl)
 library(ggplot2)
 library(gridExtra)
 
-dd <- read_excel("rawData/pathlengthdata.xlsx",col_types = "numeric")
-colnames(dd) <- c('ul80','ul100','ul125','ul150','C')
-
+dd <- read_excel("rawData/plcnewdata.xlsx",col_types = "numeric")
+#colnames(dd) <- c('ul80','ul100','ul125','ul150','C')
+colnames(dd) <- c('C','ul125','ul125s','ul125ns9','ul125s9')
 ##### FIT
 fit <- lm(C~ul125+I(ul125^2)+I(ul125^3), data=dd)
 summary(fit)
@@ -20,6 +20,7 @@ ggplot(dd, aes(x=C,y=ul125)) +
   geom_point(na.rm = TRUE,alpha=0.7,col=4,size=3,shape=7) +
   geom_line(aes(x=pC, y=ul125),alpha=0.5,col=2,size=1.5) +
   labs(title="Path Length Correction",
+       subtitle="FYV4 | YPDA | ul125 | Single Point | No Shake", 
        x ="Cuvette OD", y = "Plate OD") +
   theme_light() + 
   theme(panel.grid.minor = element_line(colour="grey30", size=0.1)) +
@@ -28,7 +29,7 @@ ggplot(dd, aes(x=C,y=ul125)) +
 
 summary(fit)$r.squared
 summary(fit)$adj.r.squared
-save(fit, file = 'plc_models/plcor125.rda')
+save(fit, file = 'plc_models/plc_fy125mps.rda')
 
 ##### CHECKING STARTING ODs
 invfit <- lm(ul125~C+I(C^2)+I(C^3), data=dd)
@@ -37,6 +38,7 @@ temp <- data.frame(C = c(0.25,0.125,0.0625,0.03125))
 cstart <- predict(invfit, temp)
 cstart
 
+##### BLANK CORRECTION TRIAL
 bc <- seq(0,0.5,0.005)
 temp.c <- data.frame(C = 0.25)
 temp.cstart <- NULL

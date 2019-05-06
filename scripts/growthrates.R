@@ -15,8 +15,8 @@ library(ggplot2)
 library(ggpubr)
 library(stringr)
 library(smoother)
-source("functions/plcor.R")
-load('plc_models/plcor125_nobc.rda')
+#source("functions/plcor.R")
+load('plc_models/plc_fy125spns.rda')
 
 d <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp16_19_SpreedSheet.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
@@ -63,11 +63,11 @@ df[,51:97] <- df[,51:97] - blank2
 colnames(df) <- c('Time',sample.names$Sample.Name)
 
 ##### APPLY FILTERS
-for (i in 2:dim(df)[2]) {
-  df[[i]] <- smth(df[[i]],window = 0.08,method = "gaussian")
-}
-
-df <- df[4:85,]
+# for (i in 2:dim(df)[2]) {
+#   df[[i]] <- smth(df[[i]],window = 0.08,method = "gaussian")
+# }
+# 
+# df <- df[4:85,]
 
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {
