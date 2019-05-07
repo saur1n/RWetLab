@@ -120,7 +120,7 @@ out_fit <- transform(out_fit,
                      MaxGrowthRate = as.numeric(MaxGrowthRate),
                      DoubleTime = as.numeric(DoubleTime),
                      LagTime = as.numeric(LagTime),
-                     SatTime = as.numeric(SatTime))
+                     SatPoint = as.numeric(SatPoint))
 out_fit <- out_fit[1:48,] #only for exp16 ypda data
 # out_fit <- out_fit[order(out_fit$StartingOD, out_fit$Sample),]
 out_fit <- out_fit[order(out_fit$StartingOD),]
@@ -131,7 +131,7 @@ out_fit$Sample <- factor(out_fit$Sample)
 out_fit$Media <- factor(out_fit$Media)
 
 
-# write.csv(out_fit,sprintf('%sLIN_%s_GROWTH_DATA_GR.csv',path.out,expt.name))
+write.csv(out_fit,sprintf('%s%s_NEWPLC_GR.csv',path.out,expt.name))
 
 # out_res$Media = sample.names$Group.Name
 # out_res$Sample = sample.names$Sample.Name
@@ -151,50 +151,74 @@ out_fit$Media <- factor(out_fit$Media)
 # write.csv(out_res,sprintf('%sRES_%s_GROWTH_DATA_GR.csv',path.out,expt.name))
 
 ###### PLOTTING DOUBLING TIME
-out_fit <- out_fit[out_fit$Sample != 'MEDIA',]
-out_fit <- out_fit[out_fit$Sample != 'BLANK',]
+# out_fit <- out_fit[out_fit$Sample != 'MEDIA',]
+# out_fit <- out_fit[out_fit$Sample != 'BLANK',]
+
+out_fit$Colony <- as.numeric(substr(out_fit$Sample, 1,1))
+out_fit <- out_fit[!is.na(out_fit$Colony),]
+out_fit$Colony[out_fit$Colony==1] = 'One'
+out_fit$Colony[out_fit$Colony==2] = 'Two'
+out_fit$Colony[out_fit$Colony==3] = 'Three'
+out_fit$Colony[out_fit$Colony==4] = 'Four'
 
 for (m in 1:length(unique(out_fit$Media))) {
   temp <- out_fit[out_fit$Media == unique(out_fit$Media)[m],]
+  temp$StartingOD <- as.character(temp$StartingOD)
   ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
   ylim2 = boxplot.stats(temp$MaxGrowthRate)$stats[c(1, 5)]
   #change this depending on how clean the data is
   
-  p0 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
-    geom_boxplot(na.rm = TRUE,alpha=0.7) + 
-    geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
-    labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
-         x ="Sample", y = "Doubling Time (mins)") +
-    theme(legend.position = 'right') +
+  # p0 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
+  #   geom_boxplot(na.rm = TRUE,alpha=0.7) + 
+  #   geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+  #   labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
+  #        x ="Sample", y = "Doubling Time (mins)") +
+  #   theme(legend.position = 'right') +
+  #   theme_light() +
+  #   stat_compare_means(label = "p.signif",
+  #                      method = "wilcox.test",
+  #                      ref.group = ref.name[m],
+  #                      paired = FALSE,
+  #                      na.rm = TRUE)
+  # p0 + ylim(ylim1)
+  # ggsave(sprintf('%splots/LIN_%s_%s_DTIME_BOX_GR.png',
+  #                path.out,expt.name,
+  #                str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
+  #        width = 10, height = 10)
+  # 
+  # p00 <- ggplot(temp, aes(x=Sample,y=MaxGrowthRate,fill=Sample)) + 
+  #   geom_boxplot(na.rm = TRUE,alpha=0.7) + 
+  #   geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+  #   labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
+  #        x ="Sample", y = "Max Growth Rate (1/min)") +
+  #   theme(legend.position = 'right') +
+  #   theme_light() +
+  #   stat_compare_means(label = "p.signif",
+  #                      method = "wilcox.test",
+  #                      ref.group = ref.name[m],
+  #                      paired = FALSE,
+  #                      na.rm = TRUE)
+  # p00 + ylim(ylim2)
+  # ggsave(sprintf('%splots/LIN_%s_%s_MAXGR_BOX_GR.png',
+  #                path.out,expt.name,
+  #                str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
+  #        width = 10, height = 10)
+  
+  ggplot(temp, aes(x=DoubleTime,y=SatPoint,col=StartingOD,shape=Colony)) + 
+    geom_point(size=3) +
+    labs(title = "Start At? Double When? Saturate Where? Sourced How?",
+         subtitle = "Is doubling time, saturation OD and source information related to starting OD",
+         x = "Doubling Time",y = "Saturation OD") +
+    scale_shape_manual(name="Colony Source",
+                       breaks=c('One','Two','Three','Four'),
+                       values=c(0,7,12,14)) +
+    scale_colour_manual(name="Starting OD",
+                        values=c("0.03125"="#388E3C","0.0625"="#536DFE","0.125"="#7B1FA2","0.25"="#FF5722")) +
+    scale_x_continuous(breaks = seq(50,150,10), minor_breaks = seq(50,150,2.5)) +
+    scale_y_continuous(breaks = seq(1,15,1), minor_breaks = seq(1,15,0.25)) +
     theme_light() +
-    stat_compare_means(label = "p.signif",
-                       method = "wilcox.test",
-                       ref.group = ref.name[m],
-                       paired = FALSE,
-                       na.rm = TRUE)
-  p0 + ylim(ylim1)
-  ggsave(sprintf('%splots/LIN_%s_%s_DTIME_BOX_GR.png',
-                 path.out,expt.name,
-                 str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
-         width = 10, height = 10)
-
-  p00 <- ggplot(temp, aes(x=Sample,y=MaxGrowthRate,fill=Sample)) + 
-    geom_boxplot(na.rm = TRUE,alpha=0.7) + 
-    geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
-    labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
-         x ="Sample", y = "Max Growth Rate (1/min)") +
-    theme(legend.position = 'right') +
-    theme_light() +
-    stat_compare_means(label = "p.signif",
-                       method = "wilcox.test",
-                       ref.group = ref.name[m],
-                       paired = FALSE,
-                       na.rm = TRUE)
-  p00 + ylim(ylim2)
-  ggsave(sprintf('%splots/LIN_%s_%s_MAXGR_BOX_GR.png',
-                 path.out,expt.name,
-                 str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
-         width = 10, height = 10)
+    theme(axis.text.x = element_text(size=7),
+          axis.text.y = element_text(size=7))
   
   # p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
   #   geom_violin(na.rm = TRUE,alpha=0.7) + 
