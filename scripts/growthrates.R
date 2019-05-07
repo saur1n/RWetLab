@@ -16,7 +16,7 @@ library(ggpubr)
 library(stringr)
 library(smoother)
 #source("functions/plcor.R")
-load('plc_models/plc_fy125mps.rda')
+load('plc_models/plc_fy125spns.rda')
 
 d <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp16_19_SpreedSheet.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
@@ -33,10 +33,7 @@ out_fit = NULL
 maxgr_fit = NULL
 dtime_fit = NULL
 ltime_fit = NULL
-
-out_res = NULL
-maxgr_res = NULL
-dtime_res = NULL
+spoint_fit = NULL
 
 ##### CLEAN DATA
 d$Time <- seq(0,15*(dim(d)[1]-1),15)
@@ -75,34 +72,35 @@ for (i in 2:length(df)) {
     maxgr_fit[i-1] = NaN
     dtime_fit[i-1] = NaN
     ltime_fit[i-1] = NaN
-    maxgr_res[i-1] = NaN
-    dtime_fit[i-1] = NaN
+    spoint_fit[i-1] = NaN
+    
     
   } else {
     fit <- fit_easylinear(df$Time, df[[i]], h=14, quota = 1);
     maxgr_fit[i-1] = coef(fit)[[3]]
     dtime_fit[i-1] = log(2)/coef(fit)[[3]]
     ltime_fit[i-1] = coef(fit)[[4]]
+    spoint_fit[i-1] = df[[i]][dim(df)[1]-5:dim(df)[1]]
     
-    jpeg(sprintf('%s%s %s %s.png',
-                 plot.path.out,
-                 expt.name,
-                 sample.names$Sample.Name[i-1],
-                 #sample.names$Well.Location[i-1],
-                 sample.names$Descriptor1.Value[i-1]#,
-                 #str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")
-                 ),
-         width=1200, height=1200)
-    plot(fit, log = 'y',
-         main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
-                      expt.name,
-                      sample.names$Group.Name[i-1],
-                      sample.names$Sample.Name[i-1],
-                      sample.names$Well.Location[i-1],
-                      sample.names$Descriptor1.Value[i-1],
-                      log(2)/coef(fit)[[3]]),
-         ylim = c(0.04,6))
-    dev.off()
+    # jpeg(sprintf('%s%s %s %s.png',
+    #              plot.path.out,
+    #              expt.name,
+    #              sample.names$Sample.Name[i-1],
+    #              #sample.names$Well.Location[i-1],
+    #              sample.names$Descriptor1.Value[i-1]#,
+    #              #str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")
+    #              ),
+    #      width=1200, height=1200)
+    # plot(fit, log = 'y',
+    #      main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
+    #                   expt.name,
+    #                   sample.names$Group.Name[i-1],
+    #                   sample.names$Sample.Name[i-1],
+    #                   sample.names$Well.Location[i-1],
+    #                   sample.names$Descriptor1.Value[i-1],
+    #                   log(2)/coef(fit)[[3]]),
+    #      ylim = c(0.04,6))
+    # dev.off()
   }
 }
 
@@ -113,16 +111,20 @@ out_fit$StartingOD = substr(sample.names$Descriptor1.Value,4,15)
 out_fit$MaxGrowthRate = maxgr_fit
 out_fit$DoubleTime = dtime_fit
 out_fit$LagTime = ltime_fit
+out_fit$SatPoint = spoint_fit
 
 out_fit <- data.frame(matrix(unlist(out_fit), nrow=length(maxgr_fit)), stringsAsFactors=FALSE)
-colnames(out_fit) <- c('Media','Sample','StartingOD','MaxGrowthRate','DoubleTime','LagTime')
+colnames(out_fit) <- c('Media','Sample','StartingOD','MaxGrowthRate','DoubleTime','LagTime','SatPoint')
 out_fit <- transform(out_fit,
                      StartingOD = as.numeric(StartingOD),
                      MaxGrowthRate = as.numeric(MaxGrowthRate),
                      DoubleTime = as.numeric(DoubleTime),
-                     LagTime = as.numeric(LagTime))
+                     LagTime = as.numeric(LagTime),
+                     SatTime = as.numeric(SatTime))
+out_fit <- out_fit[1:48,] #only for exp16 ypda data
+# out_fit <- out_fit[order(out_fit$StartingOD, out_fit$Sample),]
 out_fit <- out_fit[order(out_fit$StartingOD),]
-out_fit <- out_fit[order(out_fit$Sample),]
+#out_fit <- out_fit[order(out_fit$Sample),]
 # out_fit <- out_fit[order(out_fit$Media),]
 rownames(out_fit) <- NULL
 out_fit$Sample <- factor(out_fit$Sample)
