@@ -109,21 +109,25 @@ for (i in 2:length(df)) {
 ###### CREATING OUTPUT FILE FOR GROWTH ATTRIBUTES
 out_fit$Media = sample.names$Group.Name
 out_fit$Sample = sample.names$Sample.Name
-out_fit$StartingOD = sample.names$Descriptor1.Value
+out_fit$StartingOD = substr(sample.names$Descriptor1.Value,4,15)
 out_fit$MaxGrowthRate = maxgr_fit
 out_fit$DoubleTime = dtime_fit
 out_fit$LagTime = ltime_fit
 
 out_fit <- data.frame(matrix(unlist(out_fit), nrow=length(maxgr_fit)), stringsAsFactors=FALSE)
-colnames(out_fit) <- c('Media','Sample','MaxGrowthRate','DoubleTime','LagTime')
+colnames(out_fit) <- c('Media','Sample','StartingOD','MaxGrowthRate','DoubleTime','LagTime')
+out_fit <- transform(out_fit,
+                     StartingOD = as.numeric(StartingOD),
+                     MaxGrowthRate = as.numeric(MaxGrowthRate),
+                     DoubleTime = as.numeric(DoubleTime),
+                     LagTime = as.numeric(LagTime))
+out_fit <- out_fit[order(out_fit$StartingOD),]
 out_fit <- out_fit[order(out_fit$Sample),]
-out_fit <- out_fit[order(out_fit$Media),]
+# out_fit <- out_fit[order(out_fit$Media),]
 rownames(out_fit) <- NULL
 out_fit$Sample <- factor(out_fit$Sample)
 out_fit$Media <- factor(out_fit$Media)
-out_fit <- transform(out_fit, MaxGrowthRate = as.numeric(MaxGrowthRate), 
-                 DoubleTime = as.numeric(DoubleTime),
-                 LagTime = as.numeric(LagTime))
+
 
 # write.csv(out_fit,sprintf('%sLIN_%s_GROWTH_DATA_GR.csv',path.out,expt.name))
 
