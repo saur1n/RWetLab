@@ -205,20 +205,26 @@ for (m in 1:length(unique(out_fit$Media))) {
   #        width = 10, height = 10)
   
   ggplot(temp, aes(x=DoubleTime,y=SatPoint,col=StartingOD,shape=Colony)) + 
-    geom_point(size=3) +
+    geom_point(size=5) +
     labs(title = "Start At? Double When? Saturate Where? Sourced How?",
-         subtitle = "Is doubling time, saturation OD and source information related to starting OD",
+         subtitle = "Are doubling time, saturation OD and source information and starting OD related?",
          x = "Doubling Time",y = "Saturation OD") +
     scale_shape_manual(name="Colony Source",
                        breaks=c('One','Two','Three','Four'),
-                       values=c(0,7,12,14)) +
+                       values=c(15,1,17,7)) +
     scale_colour_manual(name="Starting OD",
-                        values=c("0.03125"="#388E3C","0.0625"="#536DFE","0.125"="#7B1FA2","0.25"="#FF5722")) +
+                        values=c("0.03125"="#388E3C","0.0625"="#536DFE","0.125"="#FBC02D","0.25"="#FF5722")) +
     scale_x_continuous(breaks = seq(50,150,10), minor_breaks = seq(50,150,2.5)) +
     scale_y_continuous(breaks = seq(1,15,1), minor_breaks = seq(1,15,0.25)) +
     theme_light() +
-    theme(axis.text.x = element_text(size=7),
-          axis.text.y = element_text(size=7))
+    theme(axis.text.x = element_text(size=10),
+          axis.title.x = element_text(size=15),
+          axis.text.y = element_text(size=10),
+          axis.title.y = element_text(size=15),
+          plot.title = element_text(size=20,hjust = 0.5),
+          plot.subtitle = element_text(size=13,hjust = 0.5))
+  ggsave('expt16_ypda.png',
+         width = 21,height = 14)
   
   # p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
   #   geom_violin(na.rm = TRUE,alpha=0.7) + 
