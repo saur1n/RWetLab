@@ -105,25 +105,28 @@ for (i in 2:length(df)) {
 }
 
 ###### CREATING OUTPUT FILE FOR GROWTH ATTRIBUTES
-out_fit$Media = sample.names$Group.Name
+out_fit$Media = sample.names$Descriptor1.Name
 out_fit$Sample = sample.names$Sample.Name
 out_fit$StartingOD = substr(sample.names$Descriptor1.Value,4,15)
+out_fit$ObsSOD = df[1,2:97]
 out_fit$MaxGrowthRate = maxgr_fit
 out_fit$DoubleTime = dtime_fit
 out_fit$LagTime = ltime_fit
 out_fit$SatPoint = spoint_fit
 
 out_fit <- data.frame(matrix(unlist(out_fit), nrow=length(maxgr_fit)), stringsAsFactors=FALSE)
-colnames(out_fit) <- c('Media','Sample','StartingOD','MaxGrowthRate','DoubleTime','LagTime','SatPoint')
+colnames(out_fit) <- c('Media','Sample','StartingOD','ObsSOD','MaxGrowthRate','DoubleTime','LagTime','SatPoint')
 out_fit <- transform(out_fit,
                      StartingOD = as.numeric(StartingOD),
+                     ObsSOD = as.numeric(ObsSOD),
                      MaxGrowthRate = as.numeric(MaxGrowthRate),
                      DoubleTime = as.numeric(DoubleTime),
                      LagTime = as.numeric(LagTime),
                      SatPoint = as.numeric(SatPoint))
-out_fit <- out_fit[1:48,] #only for exp16 ypda data
+out_fit <- out_fit[!grepl("BLANK",out_fit$Sample),]
+# out_fit <- out_fit[1:48,] #only for exp16 ypda data
 # out_fit <- out_fit[order(out_fit$StartingOD, out_fit$Sample),]
-out_fit <- out_fit[order(out_fit$StartingOD),]
+out_fit <- out_fit[order(out_fit$Media, out_fit$StartingOD),]
 #out_fit <- out_fit[order(out_fit$Sample),]
 # out_fit <- out_fit[order(out_fit$Media),]
 rownames(out_fit) <- NULL
@@ -132,23 +135,6 @@ out_fit$Media <- factor(out_fit$Media)
 
 
 write.csv(out_fit,sprintf('%s%s_NEWPLC_GR.csv',path.out,expt.name))
-
-# out_res$Media = sample.names$Group.Name
-# out_res$Sample = sample.names$Sample.Name
-# out_res$MaxGrowthRate = maxgr_res
-# out_res$DoubleTime = dtime_res
-# 
-# out_res <- data.frame(matrix(unlist(out_res), nrow=length(maxgr_res)), stringsAsFactors=FALSE)
-# colnames(out_res) <- c('Media','Sample','MaxGrowthRate','DoubleTime')
-# out_res <- out_res[order(out_res$Sample),]
-# out_res <- out_res[order(out_res$Media),]
-# rownames(out_res) <- NULL
-# out_res$Sample <- factor(out_res$Sample)
-# out_res$Media <- factor(out_res$Media)
-# out_res <- transform(out_res, MaxGrowthRate = as.numeric(MaxGrowthRate), 
-#                  DoubleTime = as.numeric(DoubleTime))
-# 
-# write.csv(out_res,sprintf('%sRES_%s_GROWTH_DATA_GR.csv',path.out,expt.name))
 
 ###### PLOTTING DOUBLING TIME
 # out_fit <- out_fit[out_fit$Sample != 'MEDIA',]
@@ -164,9 +150,9 @@ out_fit$Colony[out_fit$Colony==4] = 'Four'
 for (m in 1:length(unique(out_fit$Media))) {
   temp <- out_fit[out_fit$Media == unique(out_fit$Media)[m],]
   temp$StartingOD <- as.character(temp$StartingOD)
-  ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
-  ylim2 = boxplot.stats(temp$MaxGrowthRate)$stats[c(1, 5)]
-  #change this depending on how clean the data is
+  # ylim1 = boxplot.stats(temp$DoubleTime)$stats[c(1, 5)]
+  # ylim2 = boxplot.stats(temp$MaxGrowthRate)$stats[c(1, 5)]
+  # change this depending on how clean the data is
   
   # p0 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
   #   geom_boxplot(na.rm = TRUE,alpha=0.7) + 
@@ -185,65 +171,58 @@ for (m in 1:length(unique(out_fit$Media))) {
   #                path.out,expt.name,
   #                str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
   #        width = 10, height = 10)
-  # 
-  # p00 <- ggplot(temp, aes(x=Sample,y=MaxGrowthRate,fill=Sample)) + 
-  #   geom_boxplot(na.rm = TRUE,alpha=0.7) + 
-  #   geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
-  #   labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
-  #        x ="Sample", y = "Max Growth Rate (1/min)") +
-  #   theme(legend.position = 'right') +
-  #   theme_light() +
-  #   stat_compare_means(label = "p.signif",
-  #                      method = "wilcox.test",
-  #                      ref.group = ref.name[m],
-  #                      paired = FALSE,
-  #                      na.rm = TRUE)
-  # p00 + ylim(ylim2)
-  # ggsave(sprintf('%splots/LIN_%s_%s_MAXGR_BOX_GR.png',
-  #                path.out,expt.name,
-  #                str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
-  #        width = 10, height = 10)
   
-  ggplot(temp, aes(x=DoubleTime,y=SatPoint,col=StartingOD,shape=Colony)) + 
-    geom_point(size=5) +
-    labs(title = "Start At? Double When? Saturate Where? Sourced How?",
-         subtitle = "Are doubling time, saturation OD and source information and starting OD related?",
-         x = "Doubling Time",y = "Saturation OD") +
-    scale_shape_manual(name="Colony Source",
-                       breaks=c('One','Two','Three','Four'),
-                       values=c(15,1,17,7)) +
-    scale_colour_manual(name="Starting OD",
-                        values=c("0.03125"="#388E3C","0.0625"="#536DFE","0.125"="#FBC02D","0.25"="#FF5722")) +
-    scale_x_continuous(breaks = seq(50,150,10), minor_breaks = seq(50,150,2.5)) +
-    scale_y_continuous(breaks = seq(1,15,1), minor_breaks = seq(1,15,0.25)) +
-    theme_light() +
-    theme(axis.text.x = element_text(size=10),
-          axis.title.x = element_text(size=15),
-          axis.text.y = element_text(size=10),
-          axis.title.y = element_text(size=15),
-          plot.title = element_text(size=20,hjust = 0.5),
-          plot.subtitle = element_text(size=13,hjust = 0.5))
-  ggsave('expt16_ypda.png',
-         width = 21,height = 14)
-  
-  # p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
-  #   geom_violin(na.rm = TRUE,alpha=0.7) + 
-  #   geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
-  #   labs(title=sprintf("%s: %s",expt.name,unique(out_fit$Media)[m]),
-  #        x ="Sample", y = "Doubling Time (mins)") +
-  #   theme(legend.position = 'right') +
+  # ggplot(temp, aes(x=DoubleTime,y=SatPoint,col=StartingOD,shape=Colony)) + 
+  #   geom_point(size=5) +
+  #   labs(title = "Start At? Double When? Saturate Where? Sourced How?",
+  #        subtitle = "Are doubling time, saturation OD and source information and starting OD related?",
+  #        x = "Doubling Time",y = "Saturation OD") +
+  #   scale_shape_manual(name="Colony Source",
+  #                      breaks=c('One','Two','Three','Four'),
+  #                      values=c(15,1,17,7)) +
+  #   scale_colour_manual(name="Starting OD",
+  #                       values=c("0.03125"="#388E3C","0.0625"="#536DFE","0.125"="#FBC02D","0.25"="#FF5722")) +
+  #   scale_x_continuous(breaks = seq(50,150,10), minor_breaks = seq(50,150,2.5)) +
+  #   scale_y_continuous(breaks = seq(1,15,1), minor_breaks = seq(1,15,0.25)) +
   #   theme_light() +
-  #   stat_compare_means(label = "p.signif",
-  #                      method = "wilcox.test",
-  #                      ref.group = ref.name[m],
-  #                      paired = FALSE,
-  #                      na.rm = TRUE)
-  # p1 + ylim(ylim1)
-  # ggsave(sprintf('%splots/LIN_%s_%s_DTIME_VIO_GR.png',
-  #                path.out,expt.name,
-  #                str_replace_all(unique(out_fit$Media)[m], "[+]", "_")),
-  #        width = 10, height = 10)
+  #   theme(axis.text.x = element_text(size=10),
+  #         axis.title.x = element_text(size=15),
+  #         axis.text.y = element_text(size=10),
+  #         axis.title.y = element_text(size=15),
+  #         plot.title = element_text(size=20,hjust = 0.5),
+  #         plot.subtitle = element_text(size=13,hjust = 0.5))
+  # ggsave(sprintf('%s_%s.png',
+  #                expt.name,
+  #                unique(out_fit$Media)[[1]]),
+  #        width = 21,height = 14)
 }
 
+out_fit$StartingOD <- as.character(out_fit$StartingOD)
+ggplot(out_fit, aes(x=DoubleTime,y=SatPoint,col=Media,shape=Colony,fill=StartingOD)) + 
+  geom_point(size=5,stroke=2) +
+  labs(title = "Start At? Double When? Saturate Where? Sourced How?",
+       subtitle = "Are doubling time, saturation OD and source information and starting OD related?",
+       x = "Doubling Time",y = "Saturation OD") +
+  scale_shape_manual(name="Colony Source",
+                     breaks=c('One','Two','Three','Four'),
+                     values=c(21,22,23,24)) +
+  scale_colour_manual(name="Start OD & Media",
+                      values=c("0.03125"="#388E3C","0.0625"="#536DFE","0.125"="#FBC02D","0.25"="#FF5722",
+                               "YPDA"="#212121","SC+GLU"="#CFD8DC"),
+                      aesthetics = c("color","fill")) +
+  # scale_fill_manual(name="Media Type",
+  #                   values=c("YPDA"="#BDBDBD","SC+GLU"="#F5F5F5")) +
+  scale_x_continuous(breaks = seq(50,150,10), minor_breaks = seq(50,150,2.5)) +
+  scale_y_continuous(breaks = seq(1,15,1), minor_breaks = seq(1,15,0.25)) +
+  theme_linedraw() +
+  theme(axis.text.x = element_text(size=10),
+        axis.title.x = element_text(size=15),
+        axis.text.y = element_text(size=10),
+        axis.title.y = element_text(size=15),
+        plot.title = element_text(size=20,hjust = 0.5),
+        plot.subtitle = element_text(size=13,hjust = 0.5))
+ggsave(sprintf('outData/plots/%s_OVERALL.png',
+               expt.name),
+       width = 21,height = 14)
 
 
