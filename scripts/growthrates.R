@@ -198,11 +198,11 @@ for (m in 1:length(unique(out_fit$Media))) {
 }
 
 out_fit$StartingOD <- as.character(out_fit$StartingOD)
-ggplot(out_fit, aes(x=DoubleTime,y=SatPoint,col=Media,shape=Colony,fill=StartingOD)) + 
+ggplot(out_fit, aes(x=DoubleTime,y=ObsSOD,col=Media,shape=Colony,fill=StartingOD)) + 
   geom_point(size=5,stroke=2) +
   labs(title = "Start At? Double When? Saturate Where? Sourced How?",
        subtitle = "Are doubling time, saturation OD and source information and starting OD related?",
-       x = "Doubling Time",y = "Saturation OD") +
+       x = "Doubling Time",y = "Observed Start OD") +
   scale_shape_manual(name="Colony Source",
                      breaks=c('One','Two','Three','Four'),
                      values=c(21,22,23,24)) +
@@ -213,7 +213,7 @@ ggplot(out_fit, aes(x=DoubleTime,y=SatPoint,col=Media,shape=Colony,fill=Starting
   # scale_fill_manual(name="Media Type",
   #                   values=c("YPDA"="#BDBDBD","SC+GLU"="#F5F5F5")) +
   scale_x_continuous(breaks = seq(50,150,10), minor_breaks = seq(50,150,2.5)) +
-  scale_y_continuous(breaks = seq(1,15,1), minor_breaks = seq(1,15,0.25)) +
+  scale_y_continuous(breaks = seq(0,1,0.1), minor_breaks = seq(0,1,0.05)) +
   theme_linedraw() +
   theme(axis.text.x = element_text(size=10),
         axis.title.x = element_text(size=15),
@@ -221,7 +221,7 @@ ggplot(out_fit, aes(x=DoubleTime,y=SatPoint,col=Media,shape=Colony,fill=Starting
         axis.title.y = element_text(size=15),
         plot.title = element_text(size=20,hjust = 0.5),
         plot.subtitle = element_text(size=13,hjust = 0.5))
-ggsave(sprintf('outData/plots/%s_OVERALL.png',
+ggsave(sprintf('outData/plots/%s_OVERALL_DTvsOSOD.png',
                expt.name),
        width = 21,height = 14)
 
