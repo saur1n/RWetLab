@@ -25,7 +25,8 @@ ggplot(dd, aes(x=C,y=ul125)) +
   theme_light() + 
   theme(panel.grid.minor = element_line(colour="grey30", size=0.1)) +
   scale_y_continuous(breaks = seq(0,10,0.2), minor_breaks = seq(0,10,0.1)) +
-  scale_x_continuous(breaks = seq(0,10,1), minor_breaks = seq(0,10,0.5))
+  scale_x_continuous(breaks = seq(0,10,1), minor_breaks = seq(0,10,0.5)) +
+  coord_cartesian(xlim = c(0,1), ylim = c(0,0.25))
 
 summary(fit)$r.squared
 summary(fit)$adj.r.squared
