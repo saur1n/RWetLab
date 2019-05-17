@@ -5,12 +5,12 @@
 # is assigning different ODs to the same media - causing the decripancies between PLC relationship
 # and final experimental usage
 
+##### SINGLE POINT SHAKE MODEL IS THE BEST!
+
 ##### INITIALIZATION
 library(readxl)
 library(ggplot2)
-load('plc_models/plc_fy125spns.rda')
-
-i <- data.frame(i = seq(0,1,0.01))
+load('plc_models/plc_fy125sps.rda')
 
 ##### LOAD DATA & PLC
 d <- read_excel("rawData/svsk.xlsx",col_types = "numeric")
@@ -28,7 +28,7 @@ ggplot(df) +
   geom_point(aes(x = KIN, y = EP, col = 'YES'), size = 3) +
   geom_point(aes(x = KINp, y = EPp, col = 'NO'), size = 3) +
   labs(title = "Readout Setting Relationship",
-       subtitle = "PLC Model = Single Point + No Shake",
+       subtitle = "PLC Model = Single Point + Shake",
        x = "Kinetic",
        y = "End Point") +
   scale_x_continuous(breaks = seq(0,2,0.2),
@@ -53,7 +53,7 @@ ggplot(df) +
         plot.subtitle = element_text(size=13,hjust = 0.5)) +
   coord_cartesian(xlim = c(0,1.3),
                   ylim = c(0,1.3))
-ggsave('outData/plots/kinVSep.png',
+ggsave('outData/plots/kinVSep_sps.png',
        width = 10,height = 10)
 
 ggplot(df) +
@@ -63,7 +63,7 @@ ggplot(df) +
   geom_point(aes(x = C, y = EP, col = 'EndPoint'),
              shape = 15, size = 3) +
   labs(title = "Effect of Plate Reader Setting",
-       subtitle = "PLC Model = Single Point + No Shake",
+       subtitle = "PLC Model = Single Point + Shake",
        x = "Cuvette OD",
        y = "Path Length Corrected Plate OD") +
   scale_x_continuous(breaks = seq(0,2,0.2),
@@ -88,7 +88,7 @@ ggplot(df) +
         plot.subtitle = element_text(size=13,hjust = 0.5)) +
   coord_cartesian(xlim = c(0,1.3),
                   ylim = c(0,1.3))
-ggsave('outData/plots/cuvetteVSall.png',
+ggsave('outData/plots/cuvetteVSall_sps.png',
        width = 10,height = 10)
 
 
