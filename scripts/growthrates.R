@@ -16,7 +16,7 @@ library(ggpubr)
 library(stringr)
 library(smoother)
 #source("functions/plcor.R")
-load('plc_models/plc_fy125spns.rda')
+load('plc_models/plc_fy125sps.rda')
 
 d <- read_excel("rawData/Exp16_19_RawData.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp16_19_SpreedSheet.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
@@ -36,6 +36,7 @@ ltime_fit = NULL
 spoint_fit = NULL
 
 ##### CLEAN DATA
+d <- round(d,3)
 d$Time <- seq(0,15*(dim(d)[1]-1),15)
 #d$Time <- d$Time*60
 #d <- d[,c(1,3:length(d))]
@@ -82,25 +83,25 @@ for (i in 2:length(df)) {
     ltime_fit[i-1] = coef(fit)[[4]]
     spoint_fit[i-1] = df[[i]][dim(df)[1]-5:dim(df)[1]]
     
-    # jpeg(sprintf('%s%s %s %s.png',
-    #              plot.path.out,
-    #              expt.name,
-    #              sample.names$Sample.Name[i-1],
-    #              #sample.names$Well.Location[i-1],
-    #              sample.names$Descriptor1.Value[i-1]#,
-    #              #str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")
-    #              ),
-    #      width=1200, height=1200)
-    # plot(fit, log = 'y',
-    #      main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
-    #                   expt.name,
-    #                   sample.names$Group.Name[i-1],
-    #                   sample.names$Sample.Name[i-1],
-    #                   sample.names$Well.Location[i-1],
-    #                   sample.names$Descriptor1.Value[i-1],
-    #                   log(2)/coef(fit)[[3]]),
-    #      ylim = c(0.04,6))
-    # dev.off()
+    jpeg(sprintf('%s%s %s %s.png',
+                 plot.path.out,
+                 expt.name,
+                 sample.names$Sample.Name[i-1],
+                 #sample.names$Well.Location[i-1],
+                 sample.names$Descriptor1.Value[i-1]#,
+                 #str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")
+                 ),
+         width=1200, height=1200)
+    plot(fit, log = 'y',
+         main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
+                      expt.name,
+                      sample.names$Group.Name[i-1],
+                      sample.names$Sample.Name[i-1],
+                      sample.names$Well.Location[i-1],
+                      sample.names$Descriptor1.Value[i-1],
+                      log(2)/coef(fit)[[3]]),
+         ylim = c(0.04,6))
+    dev.off()
   }
 }
 
@@ -132,7 +133,6 @@ out_fit <- out_fit[order(out_fit$Media, out_fit$StartingOD),]
 rownames(out_fit) <- NULL
 out_fit$Sample <- factor(out_fit$Sample)
 out_fit$Media <- factor(out_fit$Media)
-
 
 write.csv(out_fit,sprintf('%s%s_NEWPLC_GR.csv',path.out,expt.name))
 
@@ -198,7 +198,7 @@ for (m in 1:length(unique(out_fit$Media))) {
 }
 
 out_fit$StartingOD <- as.character(out_fit$StartingOD)
-ggplot(out_fit, aes(x=DoubleTime,y=ObsSOD,col=Media,shape=Colony,fill=StartingOD)) + 
+ggplot(out_fit, aes(x=DoubleTime,y=SatPoint,col=Media,shape=Colony,fill=StartingOD)) + 
   geom_point(size=5,stroke=2) +
   labs(title = "Start At? Double When? Saturate Where? Sourced How?",
        subtitle = "Are doubling time, saturation OD and source information and starting OD related?",
