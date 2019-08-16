@@ -16,9 +16,9 @@ library(ggpubr)
 library(stringr)
 source("functions/plcor.R")
 
-d <- read_excel("rawData/Exp1019.xlsx",col_types = "numeric")
+d <- read_excel("rawData/Exp0919.xlsx",col_types = "numeric")
 sample.names <- read.table("rawData/Exp08_19.txt", header = TRUE, sep = "\t",stringsAsFactors = 0)
-expt.name = 'Exp10'
+expt.name = 'Exp09'
 ref.name = c('GEV','GEV')
 path.out = 'outData/'
 dir.create(file.path(path.out, 'plots'), showWarnings = FALSE)
@@ -129,32 +129,33 @@ for (m in 1:length(unique(out$Media))) {
                        method = "wilcox.test",
                        ref.group = ref.name[m],
                        paired = FALSE,
-                       na.rm = TRUE)
+                       na.rm = TRUE) +
+    coord_cartesian(ylim = c(75,175))
   p0 #+ ylim(ylim1)
-  ggsave(sprintf('%splots/%s_%s_DTIME_BOX_%s.png',
+  ggsave(sprintf('%s%s_%s_DTIME_BOX_RAW.png',
                  path.out,expt.name,
-                 str_replace_all(unique(out$Media)[m], "[+]", "_"),
-                 model),
+                 str_replace_all(unique(out$Media)[m], "[+]", "_")),
          width = 10, height = 10)
   
-  p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
-    geom_violin(na.rm = TRUE,alpha=0.7) + 
-    geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
-    labs(title=sprintf("%s: %s",expt.name,unique(out$Media)[m]),
-          x ="Sample", y = "Doubling Time (mins)") +
-    theme(legend.position = 'right') +
-    theme_light() +
-    stat_compare_means(label = "p.signif",
-                       method = "wilcox.test",
-                       ref.group = ref.name[m],
-                       paired = FALSE,
-                       na.rm = TRUE)
-  p1 #+ ylim(ylim1)
-  ggsave(sprintf('%splots/%s_%s_DTIME_VIO_%s.png',
-                 path.out,expt.name,
-                 str_replace_all(unique(out$Media)[m], "[+]", "_"),
-                 model),
-         width = 10, height = 10)
+  # p1 <- ggplot(temp, aes(x=Sample,y=DoubleTime,fill=Sample)) + 
+  #   geom_violin(na.rm = TRUE,alpha=0.7) + 
+  #   geom_point(aes(fill = Sample),na.rm = TRUE,alpha=1) +
+  #   labs(title=sprintf("%s: %s",expt.name,unique(out$Media)[m]),
+  #         x ="Sample", y = "Doubling Time (mins)") +
+  #   theme(legend.position = 'right') +
+  #   theme_light() +
+  #   stat_compare_means(label = "p.signif",
+  #                      method = "wilcox.test",
+  #                      ref.group = ref.name[m],
+  #                      paired = FALSE,
+  #                      na.rm = TRUE) +
+  #   coord_cartesian(ylim = c(50,150))
+  # p1 #+ ylim(ylim1)
+  # ggsave(sprintf('%splots/%s_%s_DTIME_VIO_%s.png',
+  #                path.out,expt.name,
+  #                str_replace_all(unique(out$Media)[m], "[+]", "_"),
+  #                model),
+  #        width = 10, height = 10)
 }
 
 #compare_means(DoubleTime~Sample,data=temp,ref.group="REF",

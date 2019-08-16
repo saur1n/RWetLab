@@ -36,7 +36,7 @@ ltime_fit = NULL
 spoint_fit = NULL
 
 ##### CLEAN DATA
-d <- round(d,3)
+# d <- round(d,3)
 d$Time <- seq(0,15*(dim(d)[1]-1),15)
 #d$Time <- d$Time*60
 #d <- d[,c(1,3:length(d))]
@@ -66,7 +66,7 @@ colnames(df) <- c('Time',sample.names$Sample.Name)
 # }
 # 
 # df <- df[4:85,]
-
+df[,3:97] <- df[,3:97] - df[[1,2]]
 ##### LOOP THROUGH ALL DATA
 for (i in 2:length(df)) {
   if (sum(df[[i]] <= 0)) {
@@ -83,25 +83,25 @@ for (i in 2:length(df)) {
     ltime_fit[i-1] = coef(fit)[[4]]
     spoint_fit[i-1] = df[[i]][dim(df)[1]-5:dim(df)[1]]
     
-    jpeg(sprintf('%s%s %s %s.png',
-                 plot.path.out,
-                 expt.name,
-                 sample.names$Sample.Name[i-1],
-                 #sample.names$Well.Location[i-1],
-                 sample.names$Descriptor1.Value[i-1]#,
-                 #str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")
-                 ),
-         width=1200, height=1200)
-    plot(fit, log = 'y',
-         main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
-                      expt.name,
-                      sample.names$Group.Name[i-1],
-                      sample.names$Sample.Name[i-1],
-                      sample.names$Well.Location[i-1],
-                      sample.names$Descriptor1.Value[i-1],
-                      log(2)/coef(fit)[[3]]),
-         ylim = c(0.04,6))
-    dev.off()
+    # jpeg(sprintf('%s%s %s %s.png',
+    #              plot.path.out,
+    #              expt.name,
+    #              sample.names$Sample.Name[i-1],
+    #              #sample.names$Well.Location[i-1],
+    #              sample.names$Descriptor1.Value[i-1]#,
+    #              #str_replace_all(sample.names$Group.Name[i-1], "[+]", "_")
+    #              ),
+    #      width=1200, height=1200)
+    # plot(fit, log = 'y',
+    #      main=sprintf('%s\n%s %s (%s) | %s\nDoubling Time = %0.2f mins',
+    #                   expt.name,
+    #                   sample.names$Group.Name[i-1],
+    #                   sample.names$Sample.Name[i-1],
+    #                   sample.names$Well.Location[i-1],
+    #                   sample.names$Descriptor1.Value[i-1],
+    #                   log(2)/coef(fit)[[3]]),
+    #      ylim = c(0.04,6))
+    # dev.off()
   }
 }
 
