@@ -190,59 +190,29 @@ ggsave(sprintf('%sf_day.png',path.out),
        height = 10, width = 20,
        dpi = 300)
 
-
-fit12 <- lm(endpoint_1 ~ endpoint_2, data = c2p[c2p$sample == 'BSA',])
-summary(fit12)
-
-ggplot(data = c2p, aes(x = pr, y = sp, col = date)) +
-  geom_point(size = 3) +
-  # geom_smooth(method = 'lm') +
+##### f(method) = variability
+ggplot(c2p) +
+  geom_point(aes(x = pr, y = endpoint_1, col = date, shape = 'rep1'),
+             size = 3) +
+  geom_point(aes(x = pr, y = endpoint_2, col = date, shape = 'rep2'),
+             size = 3) +
+  geom_point(aes(x = pr, y = endpoint_3, col = date, shape = 'rep3'),
+             size = 3) +
+  geom_point(aes(x = pr, y = endpoint_4, col = date, shape = 'rep4'),
+             size = 3) +
   theme_linedraw() +
-  facet_wrap(~sample, drop = T)
-
-ggplot() +
-  geom_point(data = c2p, aes(x = pr, y = endpoint_1, col = 'rep1', shape = date), size = 3) +
-  geom_point(data = c2p, aes(x = pr, y = endpoint_2, col = 'rep2', shape = date), size = 3) +
-  geom_point(data = c2p, aes(x = pr, y = endpoint_3, col = 'rep3', shape = date), size = 3) +
-  geom_point(data = c2p, aes(x = pr, y = endpoint_4, col = 'rep4', shape = date), size = 3) +
-  # stat_cor(method = "pearson") +
-  facet_wrap(~sample, drop = T) +
-  theme_linedraw()
-
-ggplot() +
-  geom_abline() +
-  geom_point(data = c2p,
-             aes(x = endpoint_1, y = endpoint_2, shape = 'rep1-2', col = date),
-             size = 3) +
-  geom_point(data = c2p,
-             aes(x = endpoint_1, y = endpoint_3, shape = 'rep1-3', col = date),
-             size = 3) +
-  geom_point(data = c2p,
-             aes(x = endpoint_1, y = endpoint_4, shape = 'rep1-4', col = date),
-             size = 3) +
-  geom_point(data = c2p,
-             aes(x = endpoint_2, y = endpoint_3, shape = 'rep2-3', col = date),
-             size = 3) +
-  geom_point(data = c2p,
-             aes(x = endpoint_2, y = endpoint_4, shape = 'rep2-4', col = date),
-             size = 3) +
-  geom_point(data = c2p,
-             aes(x = endpoint_3, y = endpoint_4, shape = 'rep3-4', col = date),
-             size = 3) +
-  labs(title = 'Comparing Replicates on Plate',
-       x = 'Plate OD',
+  labs(title = 'Variability in Reading',
+       subtitle = 'as a function of Method',
+       x = 'Cuvette OD',
        y = 'Plate OD') +
+  scale_color_discrete(name = 'Date') +
   scale_shape_discrete(name = 'REP.') +
-  scale_color_discrete(name = 'Date',
-                       breaks = c('918','919','920'),
-                       labels = c('9/18','9/19','9/20')) +
-  facet_wrap(~sample, drop = T) +
-  theme_linedraw() +
-  coord_cartesian(xlim = c(0, 0.52),
-                  ylim = c(0, 0.52))
-ggsave(sprintf('%splate_rep_comp.png',path.out),
-       height = 10, width = 20,
-       dpi = 300)
+  coord_cartesian(xlim = c(0,1.2),
+                  ylim = c(0.05,0.55)) +
+  facet_grid(~sample)
+# ggsave(sprintf('%sf_meth1.png',path.out),
+#        height = 10, width = 20,
+#        dpi = 300)
 
 ggplot() +
   geom_abline() +
@@ -267,19 +237,45 @@ ggplot() +
                        labels = c('9/18','9/19','9/20')) +
   facet_wrap(~sample, drop = T) +
   theme_linedraw() +
-  coord_cartesian(xlim = c(0, 0.52),
-                  ylim = c(0, 0.52))
-ggsave(sprintf('%splate_meth_comp.png',path.out),
+  coord_cartesian(xlim = c(0.05, 0.55),
+                  ylim = c(0.05, 0.55))
+ggsave(sprintf('%sf_meth2.png',path.out),
        height = 10, width = 20,
        dpi = 300)
+
+##### f(machine) = variability
+ggplot(c2p) +
+  geom_point(aes(x = pr, y = sp, col = date),
+             size = 3) +
+  theme_linedraw() +
+  labs(title = 'Variability in Reading',
+       subtitle = 'as a function of Method',
+       x = 'SpectroMax',
+       y = 'Spectrophotometer') +
+  scale_color_discrete(name = 'Date',
+                       breaks = c('918','919','920'),
+                       labels = c('9/18','9/19','9/20')) +
+  coord_cartesian(xlim = c(0,1.2),
+                  ylim = c(0,1)) +
+  facet_grid(~sample)
+ggsave(sprintf('%sf_mach.png',path.out),
+       height = 10, width = 20,
+       dpi = 300)
+
+#####
+
+
+fit12 <- lm(endpoint_1 ~ endpoint_2, data = c2p[c2p$sample == 'BSA',])
+summary(fit12)
+
+ggplot(data = c2p, aes(x = pr, y = sp, col = date)) +
+  geom_point(size = 3) +
+  # geom_smooth(method = 'lm') +
+  theme_linedraw() +
+  facet_wrap(~sample, drop = T)
+
 
 
 sum(abs(c2p$endpoint_1[c2p$sample == 'CELL'] - c2p$endpoint_2[c2p$sample == 'CELL']))/length(c2p$endpoint_2[c2p$sample == 'CELL'])
 sum(abs(c2p$endpoint_1[c2p$sample == 'BSA'] - c2p$endpoint_2[c2p$sample == 'BSA']))/length(c2p$endpoint_2[c2p$sample == 'BSA'])
 
-#####
-?melt
-c2p_2 <- melt(c2p, id.vars = c('date','sample','od'))
-ggplot(c2p_2) +
-  geom_point(aes(x = od, y = value, shape = date, col = variable)) +
-  facet_grid(~sample)
