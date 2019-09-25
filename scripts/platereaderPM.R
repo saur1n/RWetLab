@@ -87,22 +87,23 @@ for (i in seq(1,dim(c2p)[1])) {
   c2p$cv_kin[i] <- sd(c2p[i,10:13])
 }
 c2p$cv_ep <- c2p$cv_ep/rowMeans(c2p[6:9]) * 100
+c2p$avg_ep <- rowMeans(c2p[6:9])
 c2p$cv_kin <- c2p$cv_kin/rowMeans(c2p[10:13]) * 100
+c2p$avg_kin <- rowMeans(c2p[10:13])
 
 # od_data <- melt(c2p, id = c('sample','od','date'))
 
 ggplot(c2p) +
-  geom_point(aes(x = od, y = cv_ep, col = date), size = 3) +
+  geom_point(aes(x = avg_ep, y = cv_ep, col = date), size = 3) +
   theme_linedraw() +
   labs(title = 'Variability in Reading',
        subtitle = 'as a function of OD',
-       x = 'Plate OD',
-       y = 'Coef of Variance (%)') +
+       x = 'Mean Endpoint Plate OD',
+       y = 'Coef of Variance (%) of Endpoint Plate OD') +
   scale_color_discrete(name = 'Date',
                        breaks = c('918','919','920'),
                        labels = c('9/18','9/19','9/20')) +
   facet_grid(~sample)
-
 ggsave(sprintf('%sf_od.png',path.out),
        height = 10, width = 20,
        dpi = 300)
@@ -125,14 +126,14 @@ for (s in unique(c2p$sample)) {
   }
 }
   
-ggplot(c2p) +
-  geom_point(aes(x = od, y = cv_sp), size = 3) +
-  labs(title = 'Variability in Reading',
-       subtitle = 'as a function of OD',
-       x = 'Cuvette OD',
-       y = 'Coef of Variance (%)') +
-  theme_linedraw() +
-  facet_grid(~sample)
+# ggplot(c2p) +
+#   geom_point(aes(x = avg_pr, y = cv_pr), size = 3) +
+#   labs(title = 'Variability in Reading',
+#        subtitle = 'as a function of OD',
+#        x = 'Cuvette OD',
+#        y = 'Coef of Variance (%) of Cuvette OD between Days') +
+#   theme_linedraw() +
+#   facet_grid(~sample)
 # ggsave(sprintf('%sf_od2.png',path.out),
 #        height = 10, width = 20,
 #        dpi = 300)
@@ -205,14 +206,16 @@ ggplot(c2p) +
        subtitle = 'as a function of Method',
        x = 'Cuvette OD',
        y = 'Plate OD') +
-  scale_color_discrete(name = 'Date') +
+  scale_color_discrete(name = 'Date',
+                       breaks = c('918','919','920'),
+                       labels = c('9/18','9/19','9/20')) +
   scale_shape_discrete(name = 'REP.') +
   coord_cartesian(xlim = c(0,1.2),
                   ylim = c(0.05,0.55)) +
   facet_grid(~sample)
-# ggsave(sprintf('%sf_meth1.png',path.out),
-#        height = 10, width = 20,
-#        dpi = 300)
+ggsave(sprintf('%sf_meth1.png',path.out),
+       height = 10, width = 20,
+       dpi = 300)
 
 ggplot() +
   geom_abline() +
@@ -249,7 +252,7 @@ ggplot(c2p) +
              size = 3) +
   theme_linedraw() +
   labs(title = 'Variability in Reading',
-       subtitle = 'as a function of Method',
+       subtitle = 'as a function of Machine',
        x = 'SpectroMax',
        y = 'Spectrophotometer') +
   scale_color_discrete(name = 'Date',
@@ -262,8 +265,20 @@ ggsave(sprintf('%sf_mach.png',path.out),
        height = 10, width = 20,
        dpi = 300)
 
-#####
+##### LINEAR MODELS
+library(lme4)
 
+fit_lm <- lm(cv_ep ~ sample + pr + date, c2p)
+summary(fit_lm)
+
+fit.sample <- lmer(cv_ep ~ sample + pr + (1|date),
+                   data = c2p)
+summary(fit.sample)
+fit.null <- lmer(cv_ep ~ pr + (1|date),
+                 data = c2p)
+summary(fit.null)
+
+anova(fit.null, fit.sample)
 
 fit12 <- lm(endpoint_1 ~ endpoint_2, data = c2p[c2p$sample == 'BSA',])
 summary(fit12)
@@ -278,4 +293,6 @@ ggplot(data = c2p, aes(x = pr, y = sp, col = date)) +
 
 sum(abs(c2p$endpoint_1[c2p$sample == 'CELL'] - c2p$endpoint_2[c2p$sample == 'CELL']))/length(c2p$endpoint_2[c2p$sample == 'CELL'])
 sum(abs(c2p$endpoint_1[c2p$sample == 'BSA'] - c2p$endpoint_2[c2p$sample == 'BSA']))/length(c2p$endpoint_2[c2p$sample == 'BSA'])
+
+##### KINETIC
 
