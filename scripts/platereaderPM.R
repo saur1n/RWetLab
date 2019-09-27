@@ -16,6 +16,10 @@ c2p$date <- as.character(c2p$date)
 c2p$od <- as.character(c2p$od)
 c2p <- c2p[1:48,1:13]
 
+# for (ii in 6:13) {
+#   temp <- data.frame(ul125 = c2p[[ii]])
+#   c2p[[ii]] <- predict(fit, temp)
+# }
 
 ##### f(well) = variability
 ggplot() +
@@ -48,9 +52,9 @@ ggplot() +
                        labels = c('9/18','9/19','9/20')) +
   theme_linedraw() +
   facet_grid(~sample)
-ggsave(sprintf('%sf_well.png',path.out),
-       height = 10, width = 20,
-       dpi = 300)
+# ggsave(sprintf('%sf_well.png',path.out),
+#        height = 10, width = 20,
+#        dpi = 300)
 
 mean(abs(c2p$endpoint_1[c2p$sample == 'BSA'] - c2p$endpoint_2[c2p$sample == 'BSA'])/
        (rowSums(cbind(c2p$endpoint_1[c2p$sample == 'BSA'], c2p$endpoint_2[c2p$sample == 'BSA']))/2) * 100)
@@ -91,8 +95,6 @@ c2p$avg_ep <- rowMeans(c2p[6:9])
 c2p$cv_kin <- c2p$cv_kin/rowMeans(c2p[10:13]) * 100
 c2p$avg_kin <- rowMeans(c2p[10:13])
 
-# od_data <- melt(c2p, id = c('sample','od','date'))
-
 ggplot(c2p) +
   geom_point(aes(x = avg_ep, y = cv_ep, col = date), size = 3) +
   theme_linedraw() +
@@ -104,10 +106,9 @@ ggplot(c2p) +
                        breaks = c('918','919','920'),
                        labels = c('9/18','9/19','9/20')) +
   facet_grid(~sample)
-ggsave(sprintf('%sf_od.png',path.out),
-       height = 10, width = 20,
-       dpi = 300)
-
+# ggsave(sprintf('%sf_od.png',path.out),
+#        height = 10, width = 20,
+#        dpi = 300)
 
 c2p$avg_pr <- NULL
 c2p$rng_pr <- NULL
@@ -213,9 +214,9 @@ ggplot(c2p) +
   coord_cartesian(xlim = c(0,1.2),
                   ylim = c(0.05,0.55)) +
   facet_grid(~sample)
-ggsave(sprintf('%sf_meth1.png',path.out),
-       height = 10, width = 20,
-       dpi = 300)
+# ggsave(sprintf('%sf_meth1.png',path.out),
+#        height = 10, width = 20,
+#        dpi = 300)
 
 ggplot() +
   geom_abline() +
@@ -242,9 +243,9 @@ ggplot() +
   theme_linedraw() +
   coord_cartesian(xlim = c(0.05, 0.55),
                   ylim = c(0.05, 0.55))
-ggsave(sprintf('%sf_meth2.png',path.out),
-       height = 10, width = 20,
-       dpi = 300)
+# ggsave(sprintf('%sf_meth2.png',path.out),
+#        height = 10, width = 20,
+#        dpi = 300)
 
 ##### f(machine) = variability
 ggplot(c2p) +
@@ -261,9 +262,9 @@ ggplot(c2p) +
   coord_cartesian(xlim = c(0,1.2),
                   ylim = c(0,1)) +
   facet_grid(~sample)
-ggsave(sprintf('%sf_mach.png',path.out),
-       height = 10, width = 20,
-       dpi = 300)
+# ggsave(sprintf('%sf_mach.png',path.out),
+#        height = 10, width = 20,
+#        dpi = 300)
 
 ##### LINEAR MODELS
 library(lme4)
@@ -271,7 +272,7 @@ library(lme4)
 fit_lm <- lm(cv_ep ~ sample + pr + date, c2p)
 summary(fit_lm)
 
-fit.sample <- lmer(cv_ep ~ sample + pr + (1|date),
+fit.sample <- lmer(cv_ep ~ sample + pr + (sample|date),
                    data = c2p)
 summary(fit.sample)
 fit.null <- lmer(cv_ep ~ pr + (1|date),
@@ -280,19 +281,244 @@ summary(fit.null)
 
 anova(fit.null, fit.sample)
 
-fit12 <- lm(endpoint_1 ~ endpoint_2, data = c2p[c2p$sample == 'BSA',])
-summary(fit12)
 
-ggplot(data = c2p, aes(x = pr, y = sp, col = date)) +
-  geom_point(size = 3) +
-  # geom_smooth(method = 'lm') +
+##### KINETIClibrary(locfit)
+# if (!requireNamespace("BiocManager", quietly = TRUE))
+#   install.packages("BiocManager")
+# 
+# BiocManager::install("cellGrowth")
+library(growthrates)
+library(stringr)
+kin <- read.csv("rawData/kinetic.csv")
+plate.des <- read.csv("rawData/platedesign.csv")
+plate.des$Date <- as.character(plate.des$Date)
+all.dat <- NULL
+
+for (date in unique(kin$Date)) {
+  d <-kin[kin$Date == date,]
+  d <- d[,2:dim(d)[2]]
+  ##### INITIALIZE OUTPUT
+  out = NULL
+  maxgr = NULL
+  dtime = NULL
+  ltime = NULL
+  sod = NULL
+  
+  ##### CLEAN DATA
+  d$Time <- d$Time*60
+  
+  ##### PATH LENGTH CORRECTION
+  # df <- plcor(d,125)
+  df <- d
+  
+  for (i in 3:length(df)) {
+    fit0 <- fit_easylinear(df$Time, df[[i]], h=2, quota = 1);
+    jpeg(sprintf('%sgrowthcurves/%s_%s_GC.png',
+                 path.out,
+                 date,
+                 colnames(d[i])),
+         width=600, height=600)
+    plot(fit0, log = 'y',
+         main=sprintf('%s | Doubling Time = %0.2f mins',
+                      colnames(d[i]),
+                      log(2)/coef(fit0)[[3]]),
+         ylim = c(0.1,1.2))
+    dev.off()
+    maxgr[i-2] = coef(fit0)[[3]]
+    dtime[i-2] = log(2)/coef(fit0)[[3]]
+    ltime[i-2] = coef(fit0)[[4]]
+    sod[i-2] = df[[14,i]]
+  }
+  
+  out$MaxGrowthRate = maxgr
+  out$DoubleTime = dtime
+  out$SatOD = sod
+  out <- data.frame(matrix(unlist(out), nrow=length(maxgr)), stringsAsFactors=FALSE)
+  out$Date <- date
+  out$Sample = plate.des$Sample[plate.des$Date == date]
+  out$OD = plate.des$OD[plate.des$Date == date]
+  out$PR_OD = plate.des$OOD[plate.des$Date == date]
+  
+  all.dat <- rbind(all.dat, out)
+}
+
+colnames(all.dat) <- c('MaxGR','DTime','SOD','Date','Sample','OD','PR')
+all.dat$Date <- as.character(all.dat$Date)
+# all.dat$PR <- as.double(all.dat$PR)
+
+
+ggplot() +
+  # geom_smooth(data = all.dat[all.dat$Sample == 'CELL',],
+  #             aes(x = PR, y = DTime, col = Date),
+  #             method = 'loess',
+  #             # se = F,
+  #             show.legend = FALSE) +
+  # geom_violin(data = all.dat[all.dat$Sample == 'CELL',],
+  #             aes(x = PR, y = DTime, group = PR, fill = Date),
+  #             col = 'transparent',
+  #             position = 'dodge',
+  #             width = 0.2, alpha = 0.5) +
+  geom_boxplot(data = all.dat[all.dat$Sample == 'CELL',],
+               aes(x = PR, y = DTime, group = PR, fill = Date),
+               position = 'dodge',
+               width = 0.05, alpha = 0.9) +
+  labs(title = 'Variability in Doubling Time',
+       subtitle = 'as function of OD and Day',
+       x = 'Cuvette Starting OD',
+       y = 'Doubling Time (mins)') +
+  scale_fill_discrete(name = 'Date',
+                       breaks = c('918','919','920'),
+                       labels = c('9/18','9/19','9/20')) +
+  scale_x_continuous(breaks = seq(0,1.5,0.1), minor_breaks = seq(0,1.5,0.05)) +
+  scale_y_continuous(breaks = seq(0,250,10), minor_breaks = seq(0,250,5)) +
+  theme_linedraw()
+ggsave(sprintf('%sfdt_dayod.png',path.out),
+       height = 10, width = 10,
+       dpi = 300)
+
+##### KINETICS WITH PLC
+c2p <- read.csv("rawData/cuvette.csv")
+load('plc_models/plc_fy125sps.rda')
+c2p <- c2p[1:48,1:13]
+c2p <- c2p[c2p$sample == 'CELL',]
+c2p$ep <- rowMeans(c2p[6:9])
+c2p$kin <- rowMeans(c2p[10:13])
+
+fit.ep.918 <- lm(pr~ep+I(ep^2)+I(ep^3), data=c2p[c2p$date == 918,])
+fit.kin.918 <- lm(pr~kin+I(kin^2)+I(kin^3), data=c2p[c2p$date == 918,])
+
+fit.ep.919 <- lm(pr~ep+I(ep^2)+I(ep^3), data=c2p[c2p$date == 919,])
+fit.kin.919 <- lm(pr~kin+I(kin^2)+I(kin^3), data=c2p[c2p$date == 919,])
+
+fit.ep.920 <- lm(pr~ep+I(ep^2)+I(ep^3), data=c2p[c2p$date == 920,])
+fit.kin.920 <- lm(pr~kin+I(kin^2)+I(kin^3), data=c2p[c2p$date == 920,])
+
+summary(fit.ep.919)
+
+ggplot() +
+  geom_line(data = data.frame(ep = seq(0,.5,0.01)),
+            aes(y=predict(fit.ep.918, data.frame(ep = seq(0,.5,0.01))), x=seq(0,.5,0.01),
+                col='918'), lwd = 1.2) +
+  geom_line(data = data.frame(ep = seq(0,.5,0.01)),
+            aes(y=predict(fit.ep.919, data.frame(ep = seq(0,.5,0.01))), x=seq(0,.5,0.01),
+                col='919'), lwd = 1.2) +
+  geom_line(data = data.frame(ep = seq(0,.5,0.01)),
+            aes(y=predict(fit.ep.920, data.frame(ep = seq(0,.5,0.01))), x=seq(0,.5,0.01),
+                col='920'), lwd = 1.2) +
+  geom_line(data = data.frame(ep = seq(0,.5,0.01)),
+            aes(y=predict(fit.kin.918, data.frame(kin = seq(0,.5,0.01))), x=seq(0,.5,0.01),
+                col='K918'), lwd = 1.2) +
+  geom_line(data = data.frame(ep = seq(0,.5,0.01)),
+            aes(y=predict(fit.kin.919, data.frame(kin = seq(0,.5,0.01))), x=seq(0,.5,0.01),
+                col='K919'), lwd = 1.2) +
+  geom_line(data = data.frame(ep = seq(0,.5,0.01)),
+            aes(y=predict(fit.kin.920, data.frame(kin = seq(0,.5,0.01))), x=seq(0,.5,0.01),
+                col='K920'), lwd = 1.2) +
+  coord_cartesian(ylim = c(0,1),
+                  xlim = c(0,0.5)) +
   theme_linedraw() +
-  facet_wrap(~sample, drop = T)
+  labs(title = 'Path Length Correction Models',
+       subtitle = 'By Day and Plate OD Data Type',
+       x = 'Plate OD',
+       y = 'Cuvette OD') +
+  scale_color_discrete(name = 'Date',
+                       breaks = c('918','919','920','K918','K919','K920'),
+                       labels = c('9/18','9/19','9/20','9/18 - K','9/19 - K','9/20 - K'))
+ggsave(sprintf('%splcs.png',path.out),
+       height = 10, width = 10,
+       dpi = 300)
+
+all.dat <- NULL
+for (date in unique(kin$Date)) {
+  d <- kin[kin$Date == date,]
+  d <- d[,2:dim(d)[2]]
+  
+  for (ii in 3:dim(d)[2]) {
+    temp <- data.frame(ul125 = d[[ii]])
+    d[[ii]] <- predict(fit, temp)
+  }
+  
+  ##### INITIALIZE OUTPUT
+  out = NULL
+  maxgr = NULL
+  dtime = NULL
+  ltime = NULL
+  sod = NULL
+  
+  ##### CLEAN DATA
+  d$Time <- d$Time*60
+  
+  ##### PATH LENGTH CORRECTION
+  # df <- plcor(d,125)
+  df <- d
+  
+  for (i in 3:length(df)) {
+    fit0 <- fit_easylinear(df$Time, abs(df[[i]]), h=2, quota = 1);
+    jpeg(sprintf('%sgrowthcurves/%s_%s_GC.png',
+                 path.out,
+                 date,
+                 colnames(d[i])),
+         width=600, height=600)
+    plot(fit0, log = 'y',
+         main=sprintf('%s | Doubling Time = %0.2f mins',
+                      colnames(d[i]),
+                      log(2)/coef(fit0)[[3]]),
+         ylim = c(0.1,1.2))
+    dev.off()
+    maxgr[i-2] = coef(fit0)[[3]]
+    dtime[i-2] = log(2)/coef(fit0)[[3]]
+    ltime[i-2] = coef(fit0)[[4]]
+    sod[i-2] = df[[14,i]]
+  }
+  
+  out$MaxGrowthRate = maxgr
+  out$DoubleTime = dtime
+  out$SatOD = sod
+  out <- data.frame(matrix(unlist(out), nrow=length(maxgr)), stringsAsFactors=FALSE)
+  out$Date <- date
+  out$Sample = plate.des$Sample[plate.des$Date == date]
+  out$OD = plate.des$OD[plate.des$Date == date]
+  out$PR_OD = plate.des$OOD[plate.des$Date == date]
+  
+  all.dat <- rbind(all.dat, out)
+}
+
+colnames(all.dat) <- c('MaxGR','DTime','SOD','Date','Sample','OD','PR')
+all.dat$Date <- as.character(all.dat$Date)
+# all.dat$PR <- as.double(all.dat$PR)
+
+
+ggplot() +
+  # geom_smooth(data = all.dat[all.dat$Sample == 'CELL',],
+  #             aes(x = PR, y = DTime, col = Date),
+  #             method = 'loess',
+  #             # se = F,
+  #             show.legend = FALSE) +
+  # geom_violin(data = all.dat[all.dat$Sample == 'CELL',],
+  #             aes(x = PR, y = DTime, group = PR, fill = Date),
+  #             col = 'transparent',
+  #             position = 'dodge',
+  #             width = 0.2, alpha = 0.5) +
+  geom_boxplot(data = all.dat[all.dat$Sample == 'CELL',],
+               aes(x = PR, y = DTime, group = PR, fill = Date),
+               position = 'dodge',
+               width = 0.05, alpha = 0.9) +
+  labs(title = 'Variability in Doubling Time',
+       subtitle = 'as function of OD and Day',
+       x = 'Cuvette Starting OD',
+       y = 'Doubling Time (mins)') +
+  scale_fill_discrete(name = 'Date',
+                      breaks = c('918','919','920'),
+                      labels = c('9/18','9/19','9/20')) +
+  scale_x_continuous(breaks = seq(0,1.5,0.1), minor_breaks = seq(0,1.5,0.05)) +
+  scale_y_continuous(breaks = seq(0,250,10), minor_breaks = seq(0,250,5)) +
+  theme_linedraw()
+ggsave(sprintf('%sfdt_dayod_plc.png',path.out),
+       height = 10, width = 10,
+       dpi = 300)
 
 
 
-sum(abs(c2p$endpoint_1[c2p$sample == 'CELL'] - c2p$endpoint_2[c2p$sample == 'CELL']))/length(c2p$endpoint_2[c2p$sample == 'CELL'])
-sum(abs(c2p$endpoint_1[c2p$sample == 'BSA'] - c2p$endpoint_2[c2p$sample == 'BSA']))/length(c2p$endpoint_2[c2p$sample == 'BSA'])
 
-##### KINETIC
 
+  
