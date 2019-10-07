@@ -225,26 +225,28 @@ summary(lm(cv_kin5 ~ cv_kin3, c2p))
 ##### f(method) = variability
 ggplot(c2p) +
   geom_abline() +
-  geom_point(aes(x = pr, y = endpoint_1, col = date, shape = 'rep1'),
+  geom_point(aes(x = pr, y = avg_ep, col = date, shape = 'EP'),
              size = 3) +
-  geom_point(aes(x = pr, y = endpoint_2, col = date, shape = 'rep2'),
+  geom_point(aes(x = pr, y = avg_kin, col = date, shape = 'KIN'),
              size = 3) +
-  geom_point(aes(x = pr, y = endpoint_3, col = date, shape = 'rep3'),
-             size = 3) +
-  geom_point(aes(x = pr, y = endpoint_4, col = date, shape = 'rep4'),
-             size = 3) +
+  # geom_point(aes(x = pr, y = endpoint_2, col = date, shape = 'rep2'),
+  #            size = 3) +
+  # geom_point(aes(x = pr, y = endpoint_3, col = date, shape = 'rep3'),
+  #            size = 3) +
+  # geom_point(aes(x = pr, y = endpoint_4, col = date, shape = 'rep4'),
+  #            size = 3) +
   theme_linedraw() +
-  labs(title = 'Relationship Between Cuvette OD & Plate Endpoint OD',
+  labs(title = 'Relationship Between Cuvette OD & Plate OD (w PLC)',
        subtitle = '',
        x = 'Spectromax Cuvette OD',
-       y = 'Plate Endpoint OD') +
+       y = 'Plate OD') +
   scale_color_discrete(name = 'Date',
                        breaks = c('918','919','920'),
                        labels = c('9/18','9/19','9/20')) +
   scale_y_continuous(breaks = seq(0,2,0.25)) +
   scale_shape_discrete(name = 'REP.') +
-  # coord_cartesian(xlim = c(0,1.2),
-  #                 ylim = c(0.05,0.55)) +
+  coord_cartesian(xlim = c(0,1.25),
+                  ylim = c(0,1.25)) +
   facet_grid(~sample)
 ggsave(sprintf('%sf_meth1.png',path.out),
        height = 5, width = 10,
