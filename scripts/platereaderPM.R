@@ -9,18 +9,18 @@ library(gridExtra)
 library(ggpubr)
 library(reshape2)
 
-path.out = 'outData/PR_QC/'
+path.out = 'outData/PR_QC/afterPM/'
 
-c2p <- read.csv("rawData/cuvette.csv")
+c2p <- read.csv("rawData/afterPM/cuvette.csv")
 c2p$date <- as.character(c2p$date)
 c2p$od <- as.character(c2p$od)
-c2p <- c2p[1:48,1:25]
+# c2p <- c2p[1:48,1:25]
 load('plc_models/plc_fy125sps.rda')
 
-for (ii in 6:25) {
-  temp <- data.frame(ul125 = c2p[[ii]])
-  c2p[[ii]] <- predict(fit, temp)
-}
+# for (ii in 7:14) {
+#   temp <- data.frame(ul125 = c2p[[ii]])
+#   c2p[[ii]] <- predict(fit, temp)
+# }
 
 ##### f(well) = variability
 ggplot() +
@@ -44,7 +44,7 @@ ggplot() +
              aes(x = endpoint_3, y = endpoint_4, col = date, shape = 'rep3-4'),
              size = 3) +
   labs(title = 'Variability in Plate Endpoint OD Reading (w PLC)',
-       subtitle = 'when comparing within replicates',
+       subtitle = 'when comparing within replicates across attempts',
        x = 'Plate Endpoint OD',
        y = 'Plate Endpoint OD') +
   scale_shape_discrete(name = 'REP.') +
@@ -52,9 +52,9 @@ ggplot() +
                        breaks = c('918','919','920'),
                        labels = c('9/18','9/19','9/20')) +
   theme_linedraw() +
-  facet_grid(~sample)
-ggsave(sprintf('%sf_well_plc.png',path.out),
-       height = 5, width = 10,
+  facet_grid(~attempt*sample)
+ggsave(sprintf('%sf_well.png',path.out),
+       height = 5, width = 15,
        dpi = 300)
 
 # mean(abs(c2p$endpoint_1[c2p$sample == 'BSA'] - c2p$endpoint_2[c2p$sample == 'BSA'])/
@@ -296,20 +296,20 @@ ggplot() +
   geom_point(data = c2p,
              aes(x = pr, y = endpoint_4 - kinetic_4, shape = 'rep4', col = date),
              size = 3) +
-  labs(title = 'Difference in Plate Endpoint OD and Kinetic_0 OD (w PLC)',
+  labs(title = 'Difference in Plate Endpoint OD and Kinetic_0 OD',
        subtitle = '',
        x = 'Spectromax Cuvette OD',
        y = 'Plate Endpoint - Kinetic_0 OD') +
   scale_shape_discrete(name = 'REP.') +
   scale_color_discrete(name = 'Date',
-                       breaks = c('918','919','920'),
-                       labels = c('9/18','9/19','9/20')) +
-  facet_wrap(~sample, drop = T) +
+                       breaks = c('1112','1113','1114','1115'),
+                       labels = c('11/12','11/13','11/14','11/15')) +
+  facet_wrap(~sample*attempt, drop = T) +
   theme_linedraw() #+
   # coord_cartesian(xlim = c(0, 1.2),
   #                 ylim = c(-0.06, 0.06))
-ggsave(sprintf('%sf_meth3_plc.png',path.out),
-       height = 5, width = 10,
+ggsave(sprintf('%sf_meth3.png',path.out),
+       height = 10, width = 10,
        dpi = 300)
 
 ##### f(machine) = variability
