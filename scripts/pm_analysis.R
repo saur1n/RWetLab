@@ -35,7 +35,7 @@ for(i in 1:dim(c2p)[1]) {
 c2p$cv <- c2p$sd/c2p$avg * 100 
 
 ##### BIOLOGICAL REPLICATES
-ggplot(c2p[c2p$date != '11/13' & c2p$cv < 70,]) +
+ggplot(c2p[c2p$date != '11/13' & c2p$pr > 0.1,]) +
   geom_point(aes(x = pr, y = cv, col = sample)) +
   geom_smooth(aes(x = pr, y = cv, col = sample), method = 'lm') +
   # scale_y_continuous(minor_breaks = seq(0,15,1)) +
@@ -74,12 +74,12 @@ att$varname[257:512] <- 'kinetic'
 # att$date[att$date == '1114'] <- '11/14'
 # att$date[att$date == '1115'] <- '11/15'
 
-ggplot(att[att$date != '11/13' & att$cv_tr < 70,]) +
+ggplot(att[att$date != '11/13' & att$pr > 0.1,]) +
   geom_point(aes(x = pr, y = cv_tr, col = sample)) +
   geom_smooth(aes(x = pr, y = cv_tr, col = sample), method = 'lm') +
   # scale_y_continuous(minor_breaks = seq(0,15,1)) +
   scale_color_discrete(name = 'Sample') +
-  labs(title = 'Variability in Technical Replicate Plate OD Reading',
+  labs(title = 'Variability in Technical Replicate Plate OD Reading (w PLC)',
        subtitle = 'CV % = STD(tech rep) / MEAN(tech rep) * 100',
        x = 'Cuvette OD',
        y = 'Coef of Variance (%)') +
